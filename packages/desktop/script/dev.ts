@@ -24,9 +24,15 @@ async function main() {
 }
 
 async function prepareDesktop() {
-  // Electron is installed by `bun install` from the desktop devDependencies; there is no separate install script.
+  // `bun install` normally downloads the Electron binary through the package's postinstall. A skipped,
+  // interrupted or failed postinstall leaves only the npm package behind, and electron-vite then aborts
+  // dev startup with the opaque "Electron uninstall". The installer exits immediately once the
+  // installed version matches, so running it here also repairs that state.
   await buildOpenokIcons()
-  await $`bun ./script/copy-icons.ts ${process.env.OPENCODE_CHANNEL ?? "dev"}`
+  await Promise.all([
+    $`bun run install-electron`,
+    $`bun ./script/copy-icons.ts ${process.env.OPENCODE_CHANNEL ?? "dev"}`,
+  ])
 
   if (process.platform === "darwin") process.env.ELECTRON_EXEC_PATH = await prepareDevElectron()
 }
