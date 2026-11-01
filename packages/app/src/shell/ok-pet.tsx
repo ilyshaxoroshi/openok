@@ -7,11 +7,15 @@ import "./ok-pet.css"
 // window edges. Everything is written straight to the element transform so dragging never re-renders the tree.
 const SIZE = 96
 const GRAVITY = 2200
-const RESTITUTION = 0.42
-const FRICTION = 0.82
+const RESTITUTION = 0.74
+const FRICTION = 0.9
 const AIR_DRAG = 0.999
-const SPIN_DAMPING = 0.985
-const PIXELS_PER_METER = 220
+const SPIN_DAMPING = 0.995
+const IMPACT_SPIN = 5
+const WALL_SPIN = 9
+const MAX_SPIN = 26
+const THROW = 9
+const THROW_SPIN = 0.05
 
 type Body = {
   x: number
@@ -46,6 +50,17 @@ function OkPetBody(props: { physics: boolean; label: string }) {
 
   const body: Body = { x: 0, y: 0, vx: 0, vy: 0, angle: 0, spin: 0 }
   const [ready, setReady] = createSignal(false)
+
+  // Picking the pet up snaps it back to its classic upright pose.
+  const upright = () => {
+    body.angle = 0
+    body.spin = 0
+    paint()
+  }
+
+  const clampSpin = () => {
+    body.spin = Math.max(-MAX_SPIN, Math.min(MAX_SPIN, body.spin))
+  }
 
   const bounds = () => {
     const width = Math.max(SIZE, window.innerWidth)
@@ -86,28 +101,34 @@ function OkPetBody(props: { physics: boolean; label: string }) {
 
     if (body.y + SIZE > height) {
       body.y = height - SIZE
-      if (Math.abs(body.vy) > 60) body.vy = -body.vy * RESTITUTION
-      else body.vy = 0
+      if (Math.abs(body.vy) > 60) {
+        // Lively bounce: the pet pops back up instead of settling instantly.
+        body.vy = -body.vy * RESTITUTION
+        // An off-centre landing kicks the body so a drop also tumbles it.
+        body.spin += (body.vx / SIZE) * IMPACT_SPIN
+      } else body.vy = 0
       body.vx *= FRICTION
-      // Rolling: the contact point pushes the body into a spin.
-      body.spin = body.vx / (SIZE / PIXELS_PER_METER)
     }
 
     if (body.y < 0) {
       body.y = 0
       body.vy = Math.abs(body.vy) * RESTITUTION
+      body.spin *= -0.8
     }
 
     if (body.x < 0) {
       body.x = 0
       body.vx = Math.abs(body.vx) * RESTITUTION
+      body.spin = -Math.abs(body.spin) - WALL_SPIN
     }
 
     if (body.x + SIZE > width) {
       body.x = width - SIZE
       body.vx = -Math.abs(body.vx) * RESTITUTION
+      body.spin = Math.abs(body.spin) + WALL_SPIN
     }
 
+    clampSpin()
     paint()
   }
 
@@ -124,10 +145,12 @@ function OkPetBody(props: { physics: boolean; label: string }) {
     element.setPointerCapture(event.pointerId)
     dragging = true
     origin = { x: event.clientX, y: event.clientY }
-    pointer = { id: event.pointerId, offsetX: event.clientX - body.x, offsetY: event.clientY - body.y }
     body.vx = 0
     body.vy = 0
-    body.spin = 0
+    upright()
+    // Measure the grab offset after the rotation resets, so the pet does not jump in the hand.
+    const rect = element.getBoundingClientRect()
+    pointer = { id: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top }
   }
 
   const onPointerMove = (event: PointerEvent) => {
@@ -143,11 +166,12 @@ function OkPetBody(props: { physics: boolean; label: string }) {
     dragging = false
     if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId)
     pointer = undefined
-    // Fling: how far the pointer travelled per frame becomes the body's momentum.
+    // Fling: how far the pointer travelled becomes the body's momentum, so a small nudge spins it hard.
     if (props.physics) {
-      body.vx = (event.clientX - origin.x) * 6
-      body.vy = (event.clientY - origin.y) * 6
-      body.spin = body.vx * 0.02
+      body.vx = (event.clientX - origin.x) * THROW
+      body.vy = (event.clientY - origin.y) * THROW
+      body.spin = body.vx * THROW_SPIN
+      clampSpin()
     }
   }
 
