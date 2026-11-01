@@ -34,6 +34,11 @@ export default defineConfig({
     allowedHosts: true,
     port: 3000,
   },
+  // Workspace UI packages ship TSX and are compiled by the Solid plugin, not pre-bundled. Scanning them makes the
+  // optimizer parse JSX without that plugin and abort dependency pre-bundling.
+  optimizeDeps: {
+    exclude: ["@opencode/ui", "@opencode/session-ui"],
+  },
   build: {
     ...(process.env.VITE_OPENCODE_TEST_FIXTURES === "1"
       ? {
