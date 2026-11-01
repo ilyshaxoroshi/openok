@@ -1,0 +1,29 @@
+/* The loading artwork on the new session screen: an explicit size so the full resolution image never takes the whole column. */
+[data-component="logo-loading"].new-session-mark {
+  display: block;
+  width: 240px;
+  max-width: 100%;
+  height: auto;
+  animation: new-session-mark-fade-in 600ms ease-out both;
+}
+
+@keyframes new-session-mark-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+:root[data-motion="reduce"] [data-component="logo-loading"].new-session-mark {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-component="logo-loading"].new-session-mark {
+    animation: none;
+  }
+}

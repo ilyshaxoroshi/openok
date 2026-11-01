@@ -7,6 +7,7 @@ import { Keybind } from "@opencode/ui/keybind"
 import { useCommand } from "@/shell/commands/command"
 import { Show, createMemo, createSignal, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
+import "./new-session-mark.css"
 import { createResizeObserver } from "@solid-primitives/resize-observer"
 import { getFilename } from "@opencode/util/path"
 import {
@@ -81,7 +82,7 @@ export function NewSessionView(props: {
         />
         <div class="absolute inset-x-0 top-[25.375%] flex justify-center px-6">
           <div class={NEW_SESSION_CONTENT_WIDTH}>
-            <LoadingImage class="mx-auto block h-auto w-full max-w-[520px]" />
+            <LoadingImage class="new-session-mark mx-auto block h-auto w-full" />
             <div class="mt-8 flex flex-col gap-3">
               <div data-slot="new-session-composer" class="flex flex-col gap-1">
                 <div class="relative z-10">
