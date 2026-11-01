@@ -199,7 +199,7 @@ function OkPetBody(props: { physics: boolean; label: string }) {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
-      <img src="/load.png" alt="" draggable={false} />
+      <img src="/ok.png" alt="" draggable={false} />
     </div>
   )
 }
