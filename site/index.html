@@ -216,25 +216,49 @@
         animation: float 7s ease-in-out infinite;
       }
 
+      /* The shark tilts in 3D toward the pointer; JS writes --rx/--ry from the cursor position. */
       .mascot img {
         width: 100%;
         height: auto;
         border-radius: 26px;
         display: block;
         filter: drop-shadow(0 30px 60px rgba(124, 196, 255, 0.25));
-        transform-origin: 50% 90%;
+        transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(var(--s, 1));
+        transform-style: preserve-3d;
         transition:
-          transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
-          filter 520ms ease;
+          transform 340ms cubic-bezier(0.22, 1, 0.36, 1),
+          filter 340ms ease,
+          box-shadow 340ms ease;
         will-change: transform;
         cursor: pointer;
       }
 
-      /* A gentle nudge: the shark leans toward the side you point at, like it noticed you. */
       .mascot:hover img,
       .mascot:focus-visible img {
-        transform: rotate(-5deg) rotateY(7deg) translateY(-6px) scale(1.04);
-        filter: drop-shadow(0 34px 60px rgba(124, 196, 255, 0.4)) saturate(1.08) brightness(1.04);
+        --s: 1.05;
+        box-shadow: 0 40px 70px -40px rgba(124, 196, 255, 0.85);
+        filter: drop-shadow(0 30px 50px rgba(124, 196, 255, 0.35)) saturate(1.08) brightness(1.05);
+      }
+
+      /* A spotlight that glides over the art as it tilts. */
+      .mascot .shine {
+        position: absolute;
+        inset: 0;
+        border-radius: 26px;
+        background: radial-gradient(
+          260px circle at var(--sx, 50%) var(--sy, 50%),
+          rgba(255, 255, 255, 0.2),
+          transparent 62%
+        );
+        opacity: 0;
+        transition: opacity 240ms ease;
+        pointer-events: none;
+        mix-blend-mode: soft-light;
+      }
+
+      .mascot:hover .shine,
+      .mascot:focus-visible .shine {
+        opacity: 1;
       }
 
       .mascot:focus-visible {
@@ -302,6 +326,7 @@
 
         .mascot img,
         .mascot::after,
+        .mascot .shine,
         .mascot .tag {
           transition: none;
         }
@@ -546,6 +571,7 @@
           </div>
           <div class="mascot" tabindex="0" aria-label="OpenOK — плюшевый кот-акула">
             <img src="../load.png" alt="Плюшевый котёнок-акула OpenOK" width="420" height="420" />
+            <span class="shine" aria-hidden="true"></span>
             <span class="tag">ням · это же я</span>
           </div>
         </div>
@@ -669,6 +695,28 @@
           const rect = card.getBoundingClientRect()
           card.style.setProperty("--mx", `${event.clientX - rect.left}px`)
           card.style.setProperty("--my", `${event.clientY - rect.top}px`)
+        })
+      }
+
+      // 3D tilt: the shark faces the pointer, capped so it stays a gentle lean.
+      const mascot = document.querySelector(".mascot")
+      if (mascot) {
+        const image = mascot.querySelector("img")
+        const MAX = 12
+
+        mascot.addEventListener("pointermove", (event) => {
+          const rect = mascot.getBoundingClientRect()
+          const x = (event.clientX - rect.left) / rect.width
+          const y = (event.clientY - rect.top) / rect.height
+          image.style.setProperty("--ry", `${((x - 0.5) * 2 * MAX).toFixed(2)}deg`)
+          image.style.setProperty("--rx", `${((0.5 - y) * 2 * MAX).toFixed(2)}deg`)
+          mascot.style.setProperty("--sx", `${(x * 100).toFixed(1)}%`)
+          mascot.style.setProperty("--sy", `${(y * 100).toFixed(1)}%`)
+        })
+
+        mascot.addEventListener("pointerleave", () => {
+          image.style.setProperty("--rx", "0deg")
+          image.style.setProperty("--ry", "0deg")
         })
       }
     </script>
