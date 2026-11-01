@@ -1,3 +1,10 @@
+[data-component="logo-loading"] {
+  display: block;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 [data-component="logo-mark"] {
   width: 16px;
   aspect-ratio: 4/5;

@@ -1,4 +1,4 @@
-import { Splash } from "@opencode/ui/logo"
+import { LoadingImage } from "@opencode/ui/logo"
 import { Wordmark } from "@opencode/ui/wordmark"
 import type { Platform } from "@opencode/app/desktop"
 import { onCleanup, onMount, Show } from "solid-js"
@@ -58,7 +58,7 @@ export function LoadingSplash(props: {
             "bg-v2-background-bg-base": !props.deep,
           }}
         >
-          <Splash class="w-16 h-20 opacity-50 animate-pulse" />
+          <LoadingImage class="w-16 h-16 opacity-50 animate-pulse" />
         </div>
       }
     >

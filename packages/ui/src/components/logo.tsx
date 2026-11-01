@@ -31,6 +31,18 @@ export const Splash = (props: Pick<ComponentProps<"svg">, "ref" | "class">) => {
   )
 }
 
+export const LoadingImage = (props: { class?: string; src?: string }) => {
+  return (
+    <img
+      data-component="logo-loading"
+      src={props.src ?? "/load.png"}
+      alt=""
+      draggable={false}
+      classList={{ [props.class ?? ""]: !!props.class }}
+    />
+  )
+}
+
 export const Logo = (props: { class?: string }) => {
   return (
     <svg
