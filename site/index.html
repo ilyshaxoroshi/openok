@@ -213,6 +213,7 @@
         position: relative;
         filter: drop-shadow(0 30px 60px rgba(124, 196, 255, 0.25));
         animation: float 7s ease-in-out infinite;
+        perspective: 900px;
       }
 
       .mascot img {
@@ -220,6 +221,67 @@
         height: auto;
         border-radius: 26px;
         display: block;
+        transform-origin: 50% 90%;
+        transition:
+          transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+          filter 520ms ease;
+        will-change: transform;
+        cursor: pointer;
+      }
+
+      /* A gentle nudge: the shark leans toward the side you point at, like it noticed you. */
+      .mascot:hover img,
+      .mascot:focus-visible img {
+        transform: rotate(-4.5deg) rotateY(7deg) translateY(-6px) scale(1.03);
+        filter: saturate(1.08) brightness(1.04);
+      }
+
+      .mascot:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 6px;
+        border-radius: 30px;
+      }
+
+      .mascot::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 -14px;
+        height: 26px;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(124, 196, 255, 0.28), transparent);
+        filter: blur(6px);
+        opacity: 0.7;
+        transition: opacity 400ms ease, transform 400ms ease;
+      }
+
+      .mascot:hover::after {
+        opacity: 1;
+        transform: scaleX(1.06);
+      }
+
+      .mascot .tag {
+        position: absolute;
+        left: 50%;
+        bottom: 14px;
+        translate: -50% 0;
+        padding: 7px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: color-mix(in srgb, var(--bg) 78%, transparent);
+        backdrop-filter: blur(8px);
+        font-size: 12.5px;
+        color: var(--muted);
+        white-space: nowrap;
+        opacity: 0;
+        transform: translateY(6px);
+        transition: opacity 300ms ease, transform 300ms ease;
+        pointer-events: none;
+      }
+
+      .mascot:hover .tag,
+      .mascot:focus-visible .tag {
+        opacity: 1;
+        transform: none;
       }
 
       @keyframes float {
@@ -235,6 +297,16 @@
       @media (prefers-reduced-motion: reduce) {
         .mascot {
           animation: none;
+        }
+
+        .mascot img,
+        .mascot::after,
+        .mascot .tag {
+          transition: none;
+        }
+
+        .mascot:hover img {
+          transform: none;
         }
       }
 
@@ -257,21 +329,60 @@
       }
 
       .card {
+        position: relative;
         padding: 22px;
         border-radius: var(--radius);
         border: 1px solid var(--line);
         background: var(--card);
-        transition: transform 180ms ease, border-color 180ms ease;
+        overflow: hidden;
+        transition:
+          transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+          border-color 220ms ease,
+          box-shadow 220ms ease,
+          background 220ms ease;
+      }
+
+      /* A soft light that follows the pointer across each card. */
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        background: radial-gradient(
+          240px circle at var(--mx, 50%) var(--my, 0%),
+          rgba(124, 196, 255, 0.16),
+          transparent 65%
+        );
+        opacity: 0;
+        transition: opacity 260ms ease;
+        pointer-events: none;
+      }
+
+      .card:hover::before {
+        opacity: 1;
+      }
+
+      .card > * {
+        position: relative;
       }
 
       .card:hover {
-        transform: translateY(-3px);
-        border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+        transform: translateY(-5px);
+        border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+        box-shadow: 0 22px 45px -26px rgba(124, 196, 255, 0.75);
+      }
+
+      .card:hover .ico {
+        transform: rotate(-6deg) scale(1.08);
+      }
+
+      .card:hover h3 {
+        color: var(--accent);
       }
 
       .card h3 {
         margin: 14px 0 6px;
         font-size: 17px;
+        transition: color 200ms ease;
       }
 
       .card p {
@@ -288,6 +399,7 @@
         border-radius: 12px;
         background: linear-gradient(135deg, rgba(124, 196, 255, 0.18), rgba(184, 166, 255, 0.18));
         font-size: 19px;
+        transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
       }
 
       pre.term {
@@ -300,6 +412,25 @@
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         font-size: 13.5px;
         line-height: 1.8;
+        transition: border-color 220ms ease, box-shadow 220ms ease;
+      }
+
+      pre.term:hover {
+        border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+        box-shadow: 0 0 0 3px rgba(124, 196, 255, 0.08);
+      }
+
+      .step {
+        transition: transform 240ms ease;
+      }
+
+      .step:hover {
+        transform: translateX(4px);
+      }
+
+      .step:hover .n {
+        transform: rotate(-8deg) scale(1.08);
+        box-shadow: 0 12px 26px -14px rgba(124, 196, 255, 0.9);
       }
 
       pre.term .c {
@@ -335,6 +466,9 @@
         font-weight: 700;
         color: #0b0e14;
         background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        transition:
+          transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1),
+          box-shadow 240ms ease;
       }
 
       .step h3 {
@@ -413,8 +547,9 @@
               <a class="btn" href="https://github.com/ilyshaxoroshi/openok">Смотреть код</a>
             </div>
           </div>
-          <div class="mascot">
+          <div class="mascot" tabindex="0" aria-label="OpenOK — плюшевый кот-акула">
             <img src="../load.png" alt="Плюшевый котёнок-акула OpenOK" width="420" height="420" />
+            <span class="tag">ням · это же я</span>
           </div>
         </div>
       </section>
@@ -530,6 +665,15 @@
       )
 
       for (const element of document.querySelectorAll(".reveal")) observer.observe(element)
+
+      // Track the pointer so each card's highlight follows it.
+      for (const card of document.querySelectorAll(".card")) {
+        card.addEventListener("pointermove", (event) => {
+          const rect = card.getBoundingClientRect()
+          card.style.setProperty("--mx", `${event.clientX - rect.left}px`)
+          card.style.setProperty("--my", `${event.clientY - rect.top}px`)
+        })
+      }
     </script>
   </body>
 </html>
