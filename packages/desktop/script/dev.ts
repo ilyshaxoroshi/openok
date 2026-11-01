@@ -90,36 +90,11 @@ function buildWebUi() {
 }
 
 async function startDesktop(args: string[]) {
-  const electronVite = Bun.spawn(
+  // Bun's implicit spawn environment omits values set during preparation.
+  process.exitCode = await Bun.spawn(
     ["node", fileURLToPath(new URL("../bin/electron-vite.js", import.meta.resolve("electron-vite"))), "dev", ...args],
-    // Bun's implicit spawn environment omits values set during preparation.
     { env: process.env, stdio: ["inherit", "inherit", "inherit"] },
-  )
-
-  // electron-vite starts Electron as soon as the main and preload builds finish, which on a slow machine is
-  // before the renderer dev server accepts connections. The window then loads once, sees ECONNREFUSED and stays
-  // on its failure screen, so this process holds the first window load until the port answers.
-  await waitForDevServer()
-  process.exitCode = await electronVite.exited
-}
-
-// The renderer dev server is Vite on the loopback address the main process loads. Poll it until it answers, or
-// give up after a minute so a broken server surfaces its own error instead of hanging forever.
-async function waitForDevServer() {
-  const url = `http://127.0.0.1:${process.env.OPENCODE_DESKTOP_DEV_PORT ?? 5173}/`
-  const deadline = Date.now() + 60_000
-
-  while (Date.now() < deadline) {
-    if (await reachable(url)) return
-    await Bun.sleep(150)
-  }
-}
-
-async function reachable(url: string) {
-  return fetch(url, { signal: AbortSignal.timeout(500) }).then(
-    () => true,
-    () => false,
-  )
+  ).exited
 }
 
 await main()
