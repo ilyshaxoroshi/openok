@@ -220,15 +220,12 @@
       .mascot img {
         width: 100%;
         height: auto;
-        border-radius: 26px;
         display: block;
-        filter: drop-shadow(0 30px 60px rgba(124, 196, 255, 0.25));
         transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(var(--s, 1));
         transform-style: preserve-3d;
         transition:
           transform 340ms cubic-bezier(0.22, 1, 0.36, 1),
-          filter 340ms ease,
-          box-shadow 340ms ease;
+          filter 340ms ease;
         will-change: transform;
         cursor: pointer;
       }
@@ -236,20 +233,21 @@
       .mascot:hover img,
       .mascot:focus-visible img {
         --s: 1.05;
-        box-shadow: 0 40px 70px -40px rgba(124, 196, 255, 0.85);
-        filter: drop-shadow(0 30px 50px rgba(124, 196, 255, 0.35)) saturate(1.08) brightness(1.05);
+        filter: drop-shadow(0 26px 46px rgba(124, 196, 255, 0.42)) saturate(1.08) brightness(1.05);
       }
 
-      /* A spotlight that glides over the art as it tilts. */
+      /* A spotlight that glides over the art as it tilts, with no box edge of its own. */
       .mascot .shine {
         position: absolute;
         inset: 0;
-        border-radius: 26px;
+        border-radius: 50%;
         background: radial-gradient(
           260px circle at var(--sx, 50%) var(--sy, 50%),
           rgba(255, 255, 255, 0.2),
           transparent 62%
         );
+        mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
+        -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
         opacity: 0;
         transition: opacity 240ms ease;
         pointer-events: none;
@@ -262,9 +260,7 @@
       }
 
       .mascot:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 6px;
-        border-radius: 30px;
+        outline: none;
       }
 
       .mascot::after {
