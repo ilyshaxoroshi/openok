@@ -1,5 +1,6 @@
 import { Component, Show } from "solid-js"
 import { Select } from "@opencode/ui/select"
+import { Checkbox } from "@opencode/ui/checkbox"
 import { TextInput } from "@opencode/ui/text-input"
 import { useLanguage } from "@/runtime/i18n/language"
 import { ExternalLink } from "@/runtime/platform/external-link"
@@ -168,6 +169,37 @@ export const SettingsAppearance: Component = () => {
                 onSelect={(option) => option && appearance.reduceMotion.select(option.value)}
               />
             </SettingsRow>
+
+            <SettingsRow
+              title={language.t("settings.appearance.row.pet.title")}
+              description={language.t("settings.appearance.row.pet.description")}
+            >
+              <Checkbox
+                data-action="settings-ok-pet"
+                hideLabel
+                checked={appearance.pet.current()}
+                onChange={(checked: boolean) => appearance.pet.select(checked)}
+              >
+                {language.t("settings.appearance.row.pet.title")}
+              </Checkbox>
+            </SettingsRow>
+
+            {/* Physics only means something once the pet is on screen. */}
+            <Show when={appearance.pet.current()}>
+              <SettingsRow
+                title={language.t("settings.appearance.row.petPhysics.title")}
+                description={language.t("settings.appearance.row.petPhysics.description")}
+              >
+                <Checkbox
+                  data-action="settings-ok-pet-physics"
+                  hideLabel
+                  checked={appearance.pet.physics.current()}
+                  onChange={(checked: boolean) => appearance.pet.physics.select(checked)}
+                >
+                  {language.t("settings.appearance.row.petPhysics.title")}
+                </Checkbox>
+              </SettingsRow>
+            </Show>
           </SettingsList>
         </div>
       </div>

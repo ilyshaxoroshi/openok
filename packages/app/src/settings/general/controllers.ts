@@ -102,6 +102,14 @@ export function createAppearanceSettingsController() {
       current: settings.appearance.reduceMotion,
       select: (value: ReduceMotion) => settings.appearance.setReduceMotion(value),
     },
+    pet: {
+      current: settings.appearance.pet,
+      select: (value: boolean) => settings.appearance.setPet(value),
+      physics: {
+        current: settings.appearance.petPhysics,
+        select: (value: boolean) => settings.appearance.setPetPhysics(value),
+      },
+    },
     fonts: {
       ui: createMemo(() => ({
         value: sansInput(settings.appearance.uiFont()),

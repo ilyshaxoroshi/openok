@@ -21,6 +21,7 @@ import { TabsProvider } from "@/shell/tabs/tabs"
 import { ErrorPage } from "@/shell/errors/error"
 import { AppRoutes, File, preloadRoute } from "@/shell/routes/routes"
 import { PluginRoot } from "@/runtime/plugin/root"
+import { OkPet } from "@/shell/ok-pet"
 
 export { preloadRoute }
 
@@ -108,6 +109,7 @@ export function AppInterface(props: {
               {props.children}
               {rootProps.children}
               <VoiceOverlay />
+              <OkPet />
             </VoiceProvider>
           </CommandProvider>
         </ProjectIconsProvider>

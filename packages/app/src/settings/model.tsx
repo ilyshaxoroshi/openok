@@ -148,6 +148,9 @@ const appearanceSchema = Persistence.struct({
   tabLayout: Schema.Literals(["horizontal", "vertical", "inbox"]),
   sidebarOpen: Persistence.optional(Schema.Boolean),
   reduceMotion: Schema.Literals(["system", "on", "off"]),
+  // The "OK" pet mascot that floats in the corner of the app.
+  pet: Persistence.optional(Schema.Boolean),
+  petPhysics: Persistence.optional(Schema.Boolean),
 })
 
 const permissionsSchema = Persistence.struct({
@@ -467,6 +470,14 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         reduceMotion,
         setReduceMotion(value: ReduceMotion) {
           setStore("appearance", "reduceMotion", value)
+        },
+        pet: withFallback(() => store.appearance?.pet, false),
+        setPet(value: boolean) {
+          setStore("appearance", "pet", value)
+        },
+        petPhysics: withFallback(() => store.appearance?.petPhysics, false),
+        setPetPhysics(value: boolean) {
+          setStore("appearance", "petPhysics", value)
         },
       },
       keybinds: {
