@@ -209,11 +209,11 @@
         gap: 12px;
       }
 
+      /* The floating animation lives on the wrapper so the image keeps its own hover transform. */
       .mascot {
         position: relative;
-        filter: drop-shadow(0 30px 60px rgba(124, 196, 255, 0.25));
-        animation: float 7s ease-in-out infinite;
         perspective: 900px;
+        animation: float 7s ease-in-out infinite;
       }
 
       .mascot img {
@@ -221,6 +221,7 @@
         height: auto;
         border-radius: 26px;
         display: block;
+        filter: drop-shadow(0 30px 60px rgba(124, 196, 255, 0.25));
         transform-origin: 50% 90%;
         transition:
           transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -232,8 +233,8 @@
       /* A gentle nudge: the shark leans toward the side you point at, like it noticed you. */
       .mascot:hover img,
       .mascot:focus-visible img {
-        transform: rotate(-4.5deg) rotateY(7deg) translateY(-6px) scale(1.03);
-        filter: saturate(1.08) brightness(1.04);
+        transform: rotate(-5deg) rotateY(7deg) translateY(-6px) scale(1.04);
+        filter: drop-shadow(0 34px 60px rgba(124, 196, 255, 0.4)) saturate(1.08) brightness(1.04);
       }
 
       .mascot:focus-visible {
@@ -303,10 +304,6 @@
         .mascot::after,
         .mascot .tag {
           transition: none;
-        }
-
-        .mascot:hover img {
-          transform: none;
         }
       }
 
