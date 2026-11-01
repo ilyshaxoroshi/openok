@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenOK — the op-op-op agent</title>
+    <meta name="description" content="OpenOK — тёплый форк OpenCode. Плюшевый агент для терминала и десктопа." />
+    <link rel="icon" type="image/png" href="../load.png" />
+    <meta name="theme-color" content="#0d0f14" />
+    <meta property="og:title" content="OpenOK — the op-op-op agent" />
+    <meta property="og:description" content="Плюшевый форк OpenCode. Агент для терминала и десктопа." />
+    <meta property="og:image" content="../load.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      :root {
+        --bg: #0d0f14;
+        --bg-soft: #131722;
+        --card: rgba(255, 255, 255, 0.04);
+        --line: rgba(255, 255, 255, 0.1);
+        --text: #e8ecf4;
+        --muted: #9aa6bd;
+        --accent: #7cc4ff;
+        --accent-2: #b8a6ff;
+        --pink: #ffb3c7;
+        --radius: 18px;
+        color-scheme: dark;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(1100px 600px at 15% -10%, rgba(124, 196, 255, 0.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 0%, rgba(184, 166, 255, 0.16), transparent 60%),
+          var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .wrap {
+        width: min(1120px, calc(100% - 40px));
+        margin-inline: auto;
+      }
+
+      header.nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(14px);
+        background: color-mix(in srgb, var(--bg) 72%, transparent);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .nav-inner {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        height: 62px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        color: var(--text);
+      }
+
+      .brand img {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        object-fit: cover;
+        box-shadow: 0 0 0 1px var(--line);
+      }
+
+      .spacer {
+        flex: 1;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 18px;
+        font-size: 14px;
+      }
+
+      .nav-links a {
+        color: var(--muted);
+      }
+
+      @media (max-width: 720px) {
+        .nav-links {
+          display: none;
+        }
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text);
+        background: var(--card);
+        transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        text-decoration: none;
+        border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+      }
+
+      .btn.primary {
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #0b0e14;
+        border-color: transparent;
+        box-shadow: 0 10px 30px -12px rgba(124, 196, 255, 0.69);
+      }
+
+      main section {
+        padding-block: 90px;
+      }
+
+      .hero {
+        padding-block: 80px 60px;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+        gap: 48px;
+        align-items: center;
+      }
+
+      @media (max-width: 900px) {
+        .hero-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--card);
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #6ee7a8;
+        box-shadow: 0 0 12px #6ee7a8;
+      }
+
+      h1 {
+        font-size: clamp(38px, 6vw, 62px);
+        line-height: 1.05;
+        letter-spacing: -1.5px;
+        margin: 22px 0 0;
+      }
+
+      h1 .grad {
+        background: linear-gradient(120deg, var(--accent), var(--accent-2) 55%, var(--pink));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .lead {
+        color: var(--muted);
+        font-size: 18px;
+        max-width: 52ch;
+        margin: 20px 0 32px;
+      }
+
+      .cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .mascot {
+        position: relative;
+        filter: drop-shadow(0 30px 60px rgba(124, 196, 255, 0.25));
+        animation: float 7s ease-in-out infinite;
+      }
+
+      .mascot img {
+        width: 100%;
+        height: auto;
+        border-radius: 26px;
+        display: block;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-14px);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .mascot {
+          animation: none;
+        }
+      }
+
+      h2 {
+        font-size: clamp(26px, 3.4vw, 36px);
+        letter-spacing: -0.8px;
+        margin: 0 0 12px;
+      }
+
+      .sub {
+        color: var(--muted);
+        margin: 0 0 36px;
+        max-width: 62ch;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+      }
+
+      .card {
+        padding: 22px;
+        border-radius: var(--radius);
+        border: 1px solid var(--line);
+        background: var(--card);
+        transition: transform 180ms ease, border-color 180ms ease;
+      }
+
+      .card:hover {
+        transform: translateY(-3px);
+        border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+      }
+
+      .card h3 {
+        margin: 14px 0 6px;
+        font-size: 17px;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14.5px;
+      }
+
+      .ico {
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(124, 196, 255, 0.18), rgba(184, 166, 255, 0.18));
+        font-size: 19px;
+      }
+
+      pre.term {
+        margin: 0;
+        padding: 20px 22px;
+        border-radius: var(--radius);
+        border: 1px solid var(--line);
+        background: #0a0c11;
+        overflow-x: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13.5px;
+        line-height: 1.8;
+      }
+
+      pre.term .c {
+        color: #6b7891;
+      }
+
+      pre.term .p {
+        color: #6ee7a8;
+      }
+
+      pre.term .k {
+        color: var(--accent);
+      }
+
+      .steps {
+        display: grid;
+        gap: 26px;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .step .n {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        color: #0b0e14;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      }
+
+      .step h3 {
+        margin: 6px 0 8px;
+        font-size: 17px;
+      }
+
+      .step p {
+        margin: 0 0 12px;
+        color: var(--muted);
+      }
+
+      footer {
+        border-top: 1px solid var(--line);
+        padding-block: 34px;
+        color: var(--muted);
+        font-size: 13.5px;
+      }
+
+      .foot-inner {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        align-items: center;
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(18px);
+        transition: opacity 700ms ease, transform 700ms ease;
+      }
+
+      .reveal.in {
+        opacity: 1;
+        transform: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .reveal {
+          opacity: 1;
+          transform: none;
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href="./">
+          <img src="../load.png" alt="" />
+          OpenOK
+        </a>
+        <div class="spacer"></div>
+        <nav class="nav-links">
+          <a href="#features">Возможности</a>
+          <a href="#install">Установка</a>
+          <a href="#about">О проекте</a>
+        </nav>
+        <a class="btn primary" href="https://github.com/ilyshaxoroshi/openok">GitHub</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero wrap">
+        <div class="hero-grid">
+          <div>
+            <span class="pill"><span class="dot"></span> форк OpenCode · открытый код</span>
+            <h1>Агент, который<br /><span class="grad">оп-оп-оп</span> за вас.</h1>
+            <p class="lead">
+              OpenOK — тёплый форк OpenCode: плюшевый кот-акула в терминале и на десктопе. Пишет код, читает репозиторий,
+              запускает команды и не паникует от конфликтов в merge.
+            </p>
+            <div class="cta">
+              <a class="btn primary" href="#install">Начать</a>
+              <a class="btn" href="https://github.com/ilyshaxoroshi/openok">Смотреть код</a>
+            </div>
+          </div>
+          <div class="mascot">
+            <img src="../load.png" alt="Плюшевый котёнок-акула OpenOK" width="420" height="420" />
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="wrap">
+        <h2>Что умеет</h2>
+        <p class="sub">Всё то же, что и OpenCode — только с другим настроением и своим лицом на экране загрузки.</p>
+        <div class="cards">
+          <article class="card reveal">
+            <div class="ico">⌨</div>
+            <h3>Терминал в первую очередь</h3>
+            <p>TUI, который живёт в вашей консоли. Мышь, скролл, горячие клавиши — всё на месте.</p>
+          </article>
+          <article class="card reveal">
+            <div class="ico">🪟</div>
+            <h3>Десктоп-приложение</h3>
+            <p>Electron-сборка с вкладками, сессиями и тем оформлением, которое вам нравится.</p>
+          </article>
+          <article class="card reveal">
+            <div class="ico">🔌</div>
+            <h3>Провайдеры моделей</h3>
+            <p>Подключите любую модель: локальную или облачную. Выбор за вами.</p>
+          </article>
+          <article class="card reveal">
+            <div class="ico">🧩</div>
+            <h3>Агенты и плагины</h3>
+            <p>Свои агенты, инструменты и хуки. Расширяйте под свои задачи.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="install" class="wrap">
+        <h2>Установка</h2>
+        <p class="sub">Три шага от пустого каталога до первого запроса к агенту.</p>
+        <div class="steps">
+          <div class="step reveal">
+            <div class="n">1</div>
+            <div>
+              <h3>Клонируйте репозиторий</h3>
+              <pre class="term"><span class="c"># клонирование</span>
+<span class="p">$</span> git clone https://github.com/ilyshaxoroshi/openok.git
+<span class="p">$</span> cd openok</pre>
+            </div>
+          </div>
+          <div class="step reveal">
+            <div class="n">2</div>
+            <div>
+              <h3>Поставьте зависимости</h3>
+              <pre class="term"><span class="p">$</span> <span class="k">bun</span> install</pre>
+            </div>
+          </div>
+          <div class="step reveal">
+            <div class="n">3</div>
+            <div>
+              <h3>Запустите</h3>
+              <pre class="term"><span class="c"># терминальная версия</span>
+<span class="p">$</span> <span class="k">bun</span> run dev
+
+<span class="c"># десктоп-приложение</span>
+<span class="p">$</span> <span class="k">bun</span> run dev:desktop</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="about" class="wrap">
+        <h2>О проекте</h2>
+        <p class="sub">
+          OpenOK — форк <a href="https://github.com/anomalyco/opencode">OpenCode</a>. Мы не трогаем ядро без причины: цель —
+          аккуратные визуальные правки, свои иконки и радость от работы в терминале. Весь код открыт под MIT.
+        </p>
+        <div class="cards">
+          <article class="card reveal">
+            <div class="ico">📜</div>
+            <h3>Лицензия MIT</h3>
+            <p>Форкайте, правьте, встраивайте. Только сохраните текст лицензии.</p>
+          </article>
+          <article class="card reveal">
+            <div class="ico">🐈‍⬛</div>
+            <h3>Сделано с любовью</h3>
+            <p>Плюшевый кот-акула — не только маскот, но и лицо экрана загрузки.</p>
+          </article>
+          <article class="card reveal">
+            <div class="ico">🚀</div>
+            <h3>Развивайте дальше</h3>
+            <p>Pull request’ы приветствуются — как и идеи в issues.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap foot-inner">
+        <span>© <span id="year">2026</span> OpenOK · форк OpenCode</span>
+        <div class="spacer"></div>
+        <a href="https://github.com/ilyshaxoroshi/openok">GitHub</a>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("year").textContent = String(new Date().getFullYear())
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("in")
+              observer.unobserve(entry.target)
+            }
+          }
+        },
+        { rootMargin: "0px 0px -10% 0px", threshold: 0.15 },
+      )
+
+      for (const element of document.querySelectorAll(".reveal")) observer.observe(element)
+    </script>
+  </body>
+</html>
