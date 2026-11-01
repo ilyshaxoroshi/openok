@@ -3,12 +3,16 @@ import { $ } from "bun"
 import { exists } from "node:fs/promises"
 import path from "node:path"
 import { copyBuiltCliToResources, downloadCliToResources, getCurrentCli, resolveChannel } from "./utils"
+import { buildOpenokIcons } from "./openok-icons"
 import { verifyBundles } from "./verify-bundles"
 
 // Prepares resources/ (icons, metainfo, the bundled CLI) for OPENCODE_CHANNEL and builds the app into out/.
 // The CLI comes from ../cli/dist when it holds the target; otherwise dev downloads the published dev CLI,
 // beta the beta CLI, and prod fails.
 const dir = path.resolve(import.meta.dir, "..")
+
+// The OpenOK fork ships its mascot as the app icon, so refresh the platform icons before packaging.
+await buildOpenokIcons()
 
 const cli = path.resolve(dir, "../cli/dist")
 

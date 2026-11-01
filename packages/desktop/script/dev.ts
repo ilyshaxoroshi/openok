@@ -3,6 +3,7 @@ import { constants, setPriority } from "node:os"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { prepareDevElectron } from "./dev-electron"
+import { buildOpenokIcons } from "./openok-icons"
 import { downloadCliToResources, windowsify } from "./utils"
 
 type ServerSource = { type: "build" } | { type: "download"; version: string }
@@ -24,6 +25,7 @@ async function main() {
 
 async function prepareDesktop() {
   // Electron is installed by `bun install` from the desktop devDependencies; there is no separate install script.
+  await buildOpenokIcons()
   await $`bun ./script/copy-icons.ts ${process.env.OPENCODE_CHANNEL ?? "dev"}`
 
   if (process.platform === "darwin") process.env.ELECTRON_EXEC_PATH = await prepareDevElectron()
