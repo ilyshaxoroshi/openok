@@ -349,6 +349,17 @@
     }
   }
 
+  /*
+    Reduced motion is also the low-power switch: it turns off compositor-expensive paint work that would otherwise
+    keep running while animating or scrolling. Users who disable motion on a weak machine get both effects at once.
+  */
+  :root[data-motion="reduce"] {
+    [data-slot="session-dropzone-blur"],
+    [data-slot="session-jump-to-latest"] {
+      backdrop-filter: none !important;
+    }
+  }
+
   /* A mask fades the rows themselves, so the edges work over any background, including the dropdown's. */
   [data-slot="home-projects-viewport"][data-fade-top] {
     --mask-start: 16px;
