@@ -314,23 +314,16 @@ export default function Layout(props: ParentProps) {
               : "var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))",
           }}
         >
-          {/* Keyed by the active tab so a switch replays the pane entrance. The key comes from the route, since the
-              tabs store is a list rather than a current-tab accessor, and a setting read that is still missing from
-              an older profile counts as enabled. */}
-          <Show when={settings.appearance?.tabTransitions?.() !== false && activeTabKey()}>
-            {(key) => (
-              <PluginServerCover>
-                <div data-slot="tab-transition" data-tab={key()}>
-                  <Suspense>{props.children}</Suspense>
-                </div>
-              </PluginServerCover>
-            )}
-          </Show>
-          <Show when={settings.appearance?.tabTransitions?.() === false}>
-            <PluginServerCover>
+          {/* The transition lives on this stable wrapper: it restarts the CSS entrance when the route changes and never
+              remounts the pane, so the session keeps its state across tab switches. */}
+          <PluginServerCover>
+            <div
+              data-slot="tab-transition"
+              data-tab={settings.appearance?.tabTransitions?.() === false ? undefined : activeTabKey()}
+            >
               <Suspense>{props.children}</Suspense>
-            </PluginServerCover>
-          </Show>
+            </div>
+          </PluginServerCover>
         </main>
         <CollapsedSidebarToggle />
       </div>
