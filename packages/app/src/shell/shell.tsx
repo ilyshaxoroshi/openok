@@ -50,8 +50,10 @@ export default function Layout(props: ParentProps) {
 
   // A stable key for the pane entrance: the route decides which tab is on screen, and home has no tab.
   const activeTabKey = () => {
-    const route = global.layout.route()
+    // The layout store resolves after the first paint, so an empty shell must not read it yet.
+    const route = global.layout?.route?.()
 
+    if (!route) return undefined
     if (route.type === "session") return `session:${route.server}:${route.sessionId}`
     if (route.type === "draft") return `draft:${route.draftID}`
 
