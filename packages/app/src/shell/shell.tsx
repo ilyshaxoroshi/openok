@@ -1,4 +1,4 @@
-import { Show, startTransition, Suspense, type ParentProps } from "solid-js"
+import { Show, createEffect, startTransition, Suspense, type ParentProps } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
 import { ResizeHandle } from "@opencode/ui/resize-handle"
@@ -16,6 +16,7 @@ import { COMMAND_SEARCH_ID, useCommand } from "@/shell/commands/command"
 import { useLanguage } from "@/runtime/i18n/language"
 import { useGlobal } from "@/runtime/server/runtime"
 import { useServers } from "@/runtime/server/registry"
+import { useLayout } from "@/shell/state/layout"
 import { useTabs } from "@/shell/tabs/tabs"
 import {
   CollapsedSidebarToggle,
@@ -45,20 +46,38 @@ export default function Layout(props: ParentProps) {
   const dialog = useDialog()
   const global = useGlobal()
   const servers = useServers()
+  const layout = useLayout()
   const tabs = useTabs()
   const mobile = createMediaQuery("(max-width: 767px)")
+  let pane: HTMLDivElement | undefined
 
-  // A stable key for the pane entrance: the route decides which tab is on screen, and home has no tab.
+  // A stable key for the pane entrance: the route decides which tab is on screen, and screens without a tab share their
+  // own key so switching between them still plays the entrance.
   const activeTabKey = () => {
-    // The layout store resolves after the first paint, so an empty shell must not read it yet.
-    const route = global.layout?.route?.()
+    const route = layout.route()
 
-    if (!route) return undefined
     if (route.type === "session") return `session:${route.server}:${route.sessionId}`
+
     if (route.type === "draft") return `draft:${route.draftID}`
 
     return route.type
   }
+
+  // Replaying the entrance with WAAPI keeps the pane mounted: the animation restarts on each route change, while the
+  // session below it keeps its state.
+  createEffect(() => {
+    const key = activeTabKey()
+
+    if (!key || preferences.appearance.tabTransitions() === false || prefersReducedMotion()) return
+
+    pane?.animate(
+      [
+        { opacity: 0.4, transform: "translate3d(0, 6px, 0)" },
+        { opacity: 1, transform: "none" },
+      ],
+      { duration: 240, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+    )
+  })
 
   const [state, setState] = createStore<{
     tabsWidth: number
@@ -314,13 +333,10 @@ export default function Layout(props: ParentProps) {
               : "var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))",
           }}
         >
-          {/* The transition lives on this stable wrapper: it restarts the CSS entrance when the route changes and never
-              remounts the pane, so the session keeps its state across tab switches. */}
+          {/* The transition lives on this stable wrapper: the effect above replays a WAAPI entrance when the route
+              changes, and the pane itself is never remounted, so the session keeps its state across tab switches. */}
           <PluginServerCover>
-            <div
-              data-slot="tab-transition"
-              data-tab={settings.appearance?.tabTransitions?.() === false ? undefined : activeTabKey()}
-            >
+            <div ref={pane} data-slot="tab-transition">
               <Suspense>{props.children}</Suspense>
             </div>
           </PluginServerCover>
