@@ -127,6 +127,11 @@ export default defineConfig(async ({ command }) => {
       plugins: [pickerPlugin(), appPlugin, initialChunk],
       publicDir: "../../../app/public",
       root: "src/renderer",
+      // Electron loads this URL, and on Windows "localhost" can resolve to ::1 where loopback IPv6 is
+      // blocked by a VPN or firewall. Bind the dev server to IPv4 so the window always reaches it.
+      server: {
+        host: "127.0.0.1",
+      },
       build: {
         minify: command === "build",
         sourcemap: true,

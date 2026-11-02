@@ -62,6 +62,13 @@ test("minifies only builds, previews onboarding only in development, and ships s
   expect(existsSync(path.resolve(import.meta.dirname, root, publicDir, "oc-theme-preload.js"))).toBe(true)
 })
 
+test("serves the dev renderer on IPv4 loopback", async () => {
+  // Electron loads this URL. Windows can resolve localhost to ::1, where a VPN or firewall may refuse
+  // loopback IPv6 connections, so the dev server must bind the address Electron can reach.
+  const renderer = (await load("serve")).config.renderer
+  expect(renderer?.server?.host).toBe("127.0.0.1")
+})
+
 test("bundles one Effect runtime and Drizzle while keeping native dependencies external", async () => {
   for (const name of bundled) {
     expect(Object.keys(pkg.dependencies)).not.toContain(name)
