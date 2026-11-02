@@ -202,6 +202,25 @@ export const SettingsAppearance: Component = () => {
             </Show>
           </SettingsList>
         </div>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">{language.t("settings.appearance.section.motion")}</h3>
+          <SettingsList>
+            <SettingsRow
+              title={language.t("settings.appearance.row.transitions.title")}
+              description={language.t("settings.appearance.row.transitions.description")}
+            >
+              <Checkbox
+                data-action="settings-tab-transitions"
+                hideLabel
+                checked={appearance.transitions.current()}
+                onChange={(checked: boolean) => appearance.transitions.select(checked)}
+              >
+                {language.t("settings.appearance.row.transitions.title")}
+              </Checkbox>
+            </SettingsRow>
+          </SettingsList>
+        </div>
       </div>
     </>
   )

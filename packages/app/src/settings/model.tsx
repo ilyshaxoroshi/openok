@@ -151,6 +151,8 @@ const appearanceSchema = Persistence.struct({
   // The "OK" pet mascot that floats in the corner of the app.
   pet: Persistence.optional(Schema.Boolean),
   petPhysics: Persistence.optional(Schema.Boolean),
+  // Cross-fade and lift when switching tabs or screens.
+  tabTransitions: Persistence.optional(Schema.Boolean),
 })
 
 const permissionsSchema = Persistence.struct({
@@ -478,6 +480,10 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         petPhysics: withFallback(() => store.appearance?.petPhysics, false),
         setPetPhysics(value: boolean) {
           setStore("appearance", "petPhysics", value)
+        },
+        tabTransitions: withFallback(() => store.appearance?.tabTransitions, true),
+        setTabTransitions(value: boolean) {
+          setStore("appearance", "tabTransitions", value)
         },
       },
       keybinds: {

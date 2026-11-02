@@ -110,6 +110,10 @@ export function createAppearanceSettingsController() {
         select: (value: boolean) => settings.appearance.setPetPhysics(value),
       },
     },
+    transitions: {
+      current: settings.appearance.tabTransitions,
+      select: (value: boolean) => settings.appearance.setTabTransitions(value),
+    },
     fonts: {
       ui: createMemo(() => ({
         value: sansInput(settings.appearance.uiFont()),

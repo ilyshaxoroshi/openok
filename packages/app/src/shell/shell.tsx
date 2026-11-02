@@ -24,6 +24,7 @@ import {
   paintCollapsedSlots,
 } from "@/shell/sidebar-toggle"
 import { createPanelMotion, guardClosingFocus, panelOpacity, setPanelResizing } from "@/shell/panel-motion"
+import "@/shell/transitions.css"
 import { createSidebarPeek } from "@/shell/sidebar-peek"
 import { windowDragEnabled } from "@/session/header/drag-area"
 
@@ -301,9 +302,22 @@ export default function Layout(props: ParentProps) {
               : "var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))",
           }}
         >
-          <PluginServerCover>
-            <Suspense>{props.children}</Suspense>
-          </PluginServerCover>
+          {/* Keyed by the active tab so a switch replays the pane entrance. The setting turns it off, and the key
+              stays stable while no tab is active, so nothing remounts on unrelated updates. */}
+          <Show when={settings.appearance.tabTransitions() && tabs.current()}>
+            {(tab) => (
+              <PluginServerCover>
+                <div data-slot="tab-transition" data-tab={tab().id}>
+                  <Suspense>{props.children}</Suspense>
+                </div>
+              </PluginServerCover>
+            )}
+          </Show>
+          <Show when={!settings.appearance.tabTransitions()}>
+            <PluginServerCover>
+              <Suspense>{props.children}</Suspense>
+            </PluginServerCover>
+          </Show>
         </main>
         <CollapsedSidebarToggle />
       </div>
