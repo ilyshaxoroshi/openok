@@ -13,9 +13,21 @@ import { CLI_BINARIES, nodePtyPackage } from "./script/utils"
 const { FileMatcher } = createRequire(import.meta.resolve("electron-builder"))("app-builder-lib/out/fileMatcher")
 
 const channels = [
-  { channel: "dev", appId: "ai.opencode.desktop.dev", feed: "dev" },
-  { channel: "beta", appId: "ai.opencode.desktop.beta", feed: "beta" },
-  { channel: "prod", appId: "ai.opencode.desktop", feed: "latest" },
+  {
+    channel: "dev",
+    appId: "ai.opencode.desktop.dev",
+    publish: { provider: "generic", url: "https://opencode.ai/update/api/dev/desktop/opencode/", channel: "latest" },
+  },
+  {
+    channel: "beta",
+    appId: "ai.opencode.desktop.beta",
+    publish: { provider: "generic", url: "https://opencode.ai/update/api/beta/desktop/opencode/", channel: "latest" },
+  },
+  {
+    channel: "prod",
+    appId: "io.github.ilyshaxoroshi.openok",
+    publish: { provider: "github", owner: "ilyshaxoroshi", repo: "openok" },
+  },
 ] as const
 
 function load(channel: string, target?: string): Configuration {
@@ -47,15 +59,11 @@ function trimFilter(dir: string, config: Configuration) {
   ]).createFilter()
 }
 
-test.each(channels)("channel identity for $channel", ({ channel, appId, feed }) => {
+test.each(channels)("channel identity for $channel", ({ channel, appId, publish }) => {
   const config = load(channel)
   expect(config.appId).toBe(appId)
-  // Every published channel updates from its own feed on the update service.
-  expect(config.publish).toEqual({
-    provider: "generic",
-    url: `https://opencode.ai/update/api/${feed}/desktop/opencode/`,
-    channel: "latest",
-  })
+  // Every published channel updates from its own feed: the fork feeds from its GitHub releases.
+  expect(config.publish).toEqual(publish)
   expect(config.extraMetadata?.desktopName).toBe(`${appId}.desktop`)
   // The executable must never end in `.desktop`: libappimage resolves the
   // AppImage's desktop entry by globbing `*.desktop`, and an ELF matching

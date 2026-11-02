@@ -40,21 +40,23 @@ function resolveChannel() {
   return "dev"
 }
 
-const APP_IDS = {
+// OpenOK ships as its own application so it never shares a profile, install directory or update feed with OpenCode.
+export const APP_IDS = {
   dev: "ai.opencode.desktop.dev",
   beta: "ai.opencode.desktop.beta",
-  prod: "ai.opencode.desktop",
+  prod: "io.github.ilyshaxoroshi.openok",
 } as const
 
 // libappimage (used by AppImageLauncher) resolves the .desktop entry inside an
 // AppImage by globbing `*.desktop` at the squashfs root. If the main
-// executable itself ends in `.desktop` (prod appId `ai.opencode.desktop`), the
-// ELF binary matches the glob and is parsed as a desktop entry, so
-// integration fails with `Malformed desktop entry: Unexpected char '\x7f' at 0`
-// (0x7F is the first byte of the ELF magic).
+// executable itself ends in `.desktop`, the ELF binary matches the glob and is
+// parsed as a desktop entry, so integration fails with
+// `Malformed desktop entry: Unexpected char '\x7f' at 0` (0x7F is the first
+// byte of the ELF magic).
 // https://github.com/anomalyco/opencode/issues/51867
 // Strip a trailing `.desktop` so the executable can never collide with the
-// desktop-entry glob. Beta/dev appIds end in `.beta`/`.dev` and are unaffected.
+// desktop-entry glob. OpenOK's prod id does not end in `.desktop`, but the dev
+// and beta ids still could, and the guard keeps every channel safe.
 function linuxExecutableName(appId: string): string {
   return appId.replace(/\.desktop$/, "")
 }
@@ -64,7 +66,7 @@ const getBase = (appId: string): Configuration => {
   const desktopName = `${appId}.desktop`
 
   return {
-    artifactName: "opencode-desktop-${os}-${arch}.${ext}",
+    artifactName: "OpenOK-${os}-${arch}.${ext}",
     directories: {
       output: "dist",
       buildResources: "resources",
@@ -173,7 +175,7 @@ const getBase = (appId: string): Configuration => {
       target: ["dmg", "zip"],
     },
     protocols: {
-      name: "OpenCode",
+      name: "OpenOK",
       schemes: ["opencode"],
     },
     win: {
@@ -255,20 +257,21 @@ export function getConfig() {
       return {
         ...base,
         appId,
-        productName: "OpenCode",
-        protocols: { name: "OpenCode", schemes: ["opencode"] },
+        productName: "OpenOK",
+        protocols: { name: "OpenOK", schemes: ["opencode"] },
         // An Icon Composer package compiles to Assets.car, which macOS 26 and later draw the app icon from
         // (Dock, Finder, system dialogs and the system icon styles). Older macOS keeps using the ICNS.
         mac: { ...base.mac, icon: "resources/icons/icon.icon" },
         // The DMG volume icon would otherwise use the same actool-generated ICNS.
         dmg: { icon: "resources/icons/icon.icns" },
+        // The fork updates from its own GitHub releases, so an OpenOK install never offers an upstream OpenCode build.
         publish: {
-          provider: "generic",
-          url: "https://opencode.ai/update/api/latest/desktop/opencode/",
-          channel: "latest",
+          provider: "github",
+          owner: "ilyshaxoroshi",
+          repo: "openok",
         },
         deb: { fpm: [metainfoFpm(appId), legacyDesktopEntryFpm] },
-        rpm: { packageName: "opencode", fpm: [rpmNoBuildIdLinksFpm, metainfoFpm(appId), legacyDesktopEntryFpm] },
+        rpm: { packageName: "openok", fpm: [rpmNoBuildIdLinksFpm, metainfoFpm(appId), legacyDesktopEntryFpm] },
       }
     }
   }
