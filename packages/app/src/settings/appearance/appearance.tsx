@@ -155,22 +155,6 @@ export const SettingsAppearance: Component = () => {
             </Show>
 
             <SettingsRow
-              title={language.t("settings.appearance.row.reduceMotion.title")}
-              description={language.t("settings.appearance.row.reduceMotion.description")}
-            >
-              <Select
-                data-action="settings-reduce-motion"
-                options={reduceMotionOptions}
-                current={reduceMotionOptions.find((option) => option.value === appearance.reduceMotion.current())}
-                placement="bottom-end"
-                gutter={6}
-                value={(option) => option.value}
-                label={(option) => language.t(option.label)}
-                onSelect={(option) => option && appearance.reduceMotion.select(option.value)}
-              />
-            </SettingsRow>
-
-            <SettingsRow
               title={language.t("settings.appearance.row.pet.title")}
               description={language.t("settings.appearance.row.pet.description")}
             >
@@ -206,6 +190,21 @@ export const SettingsAppearance: Component = () => {
         <div class="settings-section">
           <h3 class="settings-section-title">{language.t("settings.appearance.section.motion")}</h3>
           <SettingsList>
+            <SettingsRow
+              title={language.t("settings.appearance.row.reduceMotion.title")}
+              description={language.t("settings.appearance.row.reduceMotion.description")}
+            >
+              <Select
+                data-action="settings-reduce-motion"
+                options={reduceMotionOptions}
+                current={reduceMotionOptions.find((option) => option.value === appearance.reduceMotion.current())}
+                placement="bottom-end"
+                gutter={6}
+                value={(option) => option.value}
+                label={(option) => language.t(option.label)}
+                onSelect={(option) => option && appearance.reduceMotion.select(option.value)}
+              />
+            </SettingsRow>
             <SettingsRow
               title={language.t("settings.appearance.row.transitions.title")}
               description={language.t("settings.appearance.row.transitions.description")}
