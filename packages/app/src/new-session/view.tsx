@@ -34,7 +34,6 @@ import { useProviders } from "@/providers/catalog/providers"
 import { NEW_SESSION_CONTENT_WIDTH } from "@/new-session/layout"
 import { Persist, persisted } from "@/runtime/persistence/storage"
 import { Persistence } from "@/runtime/persistence/schema"
-import { useSettings } from "@/settings/model"
 import type { NewSessionWorkspaceController } from "./workspace/controller"
 import { NewSessionBranch } from "./workspace/selector"
 
@@ -59,8 +58,6 @@ export function NewSessionView(props: {
     WorkspaceOnboardingSchema,
     { used: false },
   )
-
-  const settings = useSettings()
 
   const location = (project?: PromptProject) =>
     props.location({
