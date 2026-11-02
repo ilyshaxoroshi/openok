@@ -6,16 +6,31 @@ import "./ok-pet.css"
 // The "OK" mascot: a draggable pet that sits above the app and, when physics is on, falls, tumbles and bumps into the
 // window edges. Everything is written straight to the element transform so dragging never re-renders the tree.
 const SIZE = 96
+
 const GRAVITY = 2200
+
 const RESTITUTION = 0.74
+
 const FRICTION = 0.9
+
 const AIR_DRAG = 0.999
+
 const SPIN_DAMPING = 0.995
+
 const IMPACT_SPIN = 5
+
 const WALL_SPIN = 9
+
 const MAX_SPIN = 26
+
 const THROW = 9
+
 const THROW_SPIN = 0.05
+
+// The pet dozes off when it has been left alone and has settled.
+const SLEEP_AFTER = 25_000
+
+const POSITION_KEY = "openok.pet.position"
 
 type Body = {
   x: number
@@ -42,14 +57,19 @@ export function OkPet() {
 
 function OkPetBody(props: { physics: boolean; label: string }) {
   let element!: HTMLDivElement
+  let bursts!: HTMLDivElement
   let handle = 0
   let previous: number | undefined
   let dragging = false
+  let lastActive = 0
   let origin = { x: 0, y: 0 }
   let pointer: { id: number; offsetX: number; offsetY: number } | undefined
+  let meow: HTMLAudioElement | undefined
+  const timers = new Set<number>()
 
   const body: Body = { x: 0, y: 0, vx: 0, vy: 0, angle: 0, spin: 0 }
   const [ready, setReady] = createSignal(false)
+  const [sleeping, setSleeping] = createSignal(false)
 
   // Picking the pet up snaps it back to its classic upright pose.
   const upright = () => {
@@ -62,17 +82,34 @@ function OkPetBody(props: { physics: boolean; label: string }) {
     body.spin = Math.max(-MAX_SPIN, Math.min(MAX_SPIN, body.spin))
   }
 
+  const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
+
   const bounds = () => {
     const width = Math.max(SIZE, window.innerWidth)
     const height = Math.max(SIZE, window.innerHeight)
+
     return { width, height }
   }
 
+  const readPosition = () => {
+    // Stored as "x,y": a malformed value just means the pet starts at home.
+    const [x, y] = (localStorage.getItem(POSITION_KEY) ?? "").split(",").map(Number)
+
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return
+
+    return { x, y }
+  }
+
+  const savePosition = () => {
+    localStorage.setItem(POSITION_KEY, `${Math.round(body.x)},${Math.round(body.y)}`)
+  }
+
   const place = () => {
-    // A little in from the bottom-left corner, as the pet's home.
-    const { height } = bounds()
-    body.x = 96
-    body.y = Math.max(0, height - SIZE - 96)
+    const { width, height } = bounds()
+    const saved = readPosition()
+    // A remembered spot from a larger window is pulled back inside the current one.
+    body.x = clamp(saved?.x ?? 96, 0, width - SIZE)
+    body.y = clamp(saved?.y ?? height - SIZE - 96, 0, height - SIZE)
     body.vx = 0
     body.vy = 0
     body.angle = 0
@@ -80,8 +117,22 @@ function OkPetBody(props: { physics: boolean; label: string }) {
     paint()
   }
 
+  // Resizing keeps the pet where it is until the window would cut it off.
+  const fit = () => {
+    const { width, height } = bounds()
+    body.x = clamp(body.x, 0, width - SIZE)
+    body.y = clamp(body.y, 0, height - SIZE)
+    paint()
+  }
+
   const paint = () => {
     element.style.transform = `translate3d(${body.x}px, ${body.y}px, 0) rotate(${body.angle}rad)`
+  }
+
+  const wake = () => {
+    lastActive = performance.now()
+
+    if (sleeping()) setSleeping(false)
   }
 
   const step = (dt: number) => {
@@ -89,6 +140,7 @@ function OkPetBody(props: { physics: boolean; label: string }) {
 
     if (!props.physics) {
       paint()
+
       return
     }
 
@@ -101,6 +153,7 @@ function OkPetBody(props: { physics: boolean; label: string }) {
 
     if (body.y + SIZE > height) {
       body.y = height - SIZE
+
       if (Math.abs(body.vy) > 60) {
         // Lively bounce: the pet pops back up instead of settling instantly.
         body.vy = -body.vy * RESTITUTION
@@ -136,14 +189,53 @@ function OkPetBody(props: { physics: boolean; label: string }) {
     const last = previous ?? time
     previous = time
     const dt = Math.min(0.032, (time - last) / 1000)
+
     if (!dragging) step(dt)
+    // Doze off only once the body has settled, so a slow fall never counts as sleep.
+    const rest = Math.abs(body.vx) < 30 && Math.abs(body.vy) < 30
+    const idle = rest && time - lastActive > SLEEP_AFTER
+
+    if (idle !== sleeping()) setSleeping(idle)
     handle = requestAnimationFrame(frame)
+  }
+
+  const playMeow = () => {
+    meow ??= new Audio("/meow.ogg")
+    meow.currentTime = 0
+    meow.volume = 0.45
+    void meow.play().catch(() => {})
+  }
+
+  const celebrate = () => {
+    wake()
+    playMeow()
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+
+    // Hearts rise out of the pet and clean themselves up.
+    for (let index = 0; index < 5; index++) {
+      const heart = document.createElement("span")
+      heart.className = "ok-pet-heart"
+      heart.textContent = "♥"
+      heart.style.setProperty("--heart-x", `${(Math.random() - 0.5) * 70}px`)
+      heart.style.setProperty("--heart-lift", `${60 + Math.random() * 40}px`)
+      heart.style.animationDelay = `${index * 60}ms`
+      bursts.append(heart)
+
+      const timer = window.setTimeout(() => {
+        heart.remove()
+        timers.delete(timer)
+      }, 1500 + index * 60)
+
+      timers.add(timer)
+    }
   }
 
   const onPointerDown = (event: PointerEvent) => {
     if (event.button !== 0) return
     element.setPointerCapture(event.pointerId)
     dragging = true
+    wake()
     origin = { x: event.clientX, y: event.clientY }
     body.vx = 0
     body.vy = 0
@@ -155,6 +247,7 @@ function OkPetBody(props: { physics: boolean; label: string }) {
 
   const onPointerMove = (event: PointerEvent) => {
     if (!dragging || !pointer || pointer.id !== event.pointerId) return
+    wake()
     const { width, height } = bounds()
     body.x = Math.min(Math.max(0, event.clientX - pointer.offsetX), width - SIZE)
     body.y = Math.min(Math.max(0, event.clientY - pointer.offsetY), height - SIZE)
@@ -164,8 +257,12 @@ function OkPetBody(props: { physics: boolean; label: string }) {
   const onPointerUp = (event: PointerEvent) => {
     if (!dragging) return
     dragging = false
+
     if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId)
     pointer = undefined
+    wake()
+    savePosition()
+
     // Fling: how far the pointer travelled becomes the body's momentum, so a small nudge spins it hard.
     if (props.physics) {
       body.vx = (event.clientX - origin.x) * THROW
@@ -178,11 +275,17 @@ function OkPetBody(props: { physics: boolean; label: string }) {
   onMount(() => {
     place()
     setReady(true)
+    lastActive = performance.now()
     handle = requestAnimationFrame(frame)
-    window.addEventListener("resize", place)
+    window.addEventListener("resize", fit)
+    window.addEventListener("pagehide", savePosition)
     onCleanup(() => {
       cancelAnimationFrame(handle)
-      window.removeEventListener("resize", place)
+      window.removeEventListener("resize", fit)
+      window.removeEventListener("pagehide", savePosition)
+
+      for (const timer of timers) clearTimeout(timer)
+      savePosition()
     })
   })
 
@@ -192,14 +295,22 @@ function OkPetBody(props: { physics: boolean; label: string }) {
       data-component="ok-pet"
       data-physics={props.physics ? "on" : "off"}
       data-ready={ready() ? "true" : "false"}
+      data-sleeping={sleeping() ? "true" : "false"}
       role="img"
       aria-label={props.label}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
+      onDblClick={celebrate}
     >
       <img src="/ok.png" alt="" draggable={false} />
+      <div data-slot="ok-pet-bursts" ref={bursts} aria-hidden="true" />
+      <Show when={sleeping()}>
+        <span data-slot="ok-pet-z" aria-hidden="true">
+          z
+        </span>
+      </Show>
     </div>
   )
 }
