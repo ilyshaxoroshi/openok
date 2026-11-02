@@ -8,7 +8,7 @@ import { ExternalLink } from "@/runtime/platform/external-link"
 import { showToast } from "@/shell/notifications/toast"
 import legal from "./legal.svg"
 import anomalyBrush from "./anomaly-brush.svg"
-import { AnimatedWordmark } from "./animated-wordmark"
+import { LoadingImage } from "@opencode/ui/logo"
 import { FALLBACK_OTHER_CONTRIBUTORS, loadOtherContributorCount } from "./contributors"
 
 const writers = [
@@ -129,7 +129,9 @@ export function SettingsAbout(props: { active: boolean }) {
         <p>{language.t("settings.about.license")}</p>
       </div>
 
-      <AnimatedWordmark active={props.active} />
+      <LoadingImage class="settings-about-mark" src="/ok.png" />
+
+      <p class="settings-about-openok">{language.t("settings.about.openok")}</p>
 
       <div class="settings-about-credits">
         <p>{language.rich("settings.about.writtenByNames", { names: language.list(writerCredits()) })}</p>

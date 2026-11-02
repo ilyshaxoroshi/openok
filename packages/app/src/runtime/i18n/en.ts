@@ -829,6 +829,7 @@ export const dict = {
   "settings.about.devVersion": "development",
   "settings.about.copyVersionFailed": "Failed to copy version",
   "settings.about.license": "Released under the MIT License",
+  "settings.about.openok": "OpenOK is an open fork of OpenCode, the open source coding agent",
   "settings.about.writtenByNames": "Written by {{names}}",
   "settings.about.illustratedByNames": "Illustrated by {{names}}",
   "settings.about.otherContributor.one": "{{count}} other",
