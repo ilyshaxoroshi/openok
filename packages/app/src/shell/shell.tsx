@@ -48,6 +48,16 @@ export default function Layout(props: ParentProps) {
   const tabs = useTabs()
   const mobile = createMediaQuery("(max-width: 767px)")
 
+  // A stable key for the pane entrance: the route decides which tab is on screen, and home has no tab.
+  const activeTabKey = () => {
+    const route = global.layout.route()
+
+    if (route.type === "session") return `session:${route.server}:${route.sessionId}`
+    if (route.type === "draft") return `draft:${route.draftID}`
+
+    return route.type
+  }
+
   const [state, setState] = createStore<{
     tabsWidth: number
     tabsMount: HTMLElement | undefined
@@ -302,13 +312,13 @@ export default function Layout(props: ParentProps) {
               : "var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))",
           }}
         >
-          {/* Keyed by the active tab so a switch replays the pane entrance. The setting turns it off, and the key
-              stays stable while no tab is active, so nothing remounts on unrelated updates. The settings store can
-              still be missing keys from an older profile, so read it defensively. */}
-          <Show when={settings.appearance?.tabTransitions?.() !== false && tabs.current()}>
-            {(tab) => (
+          {/* Keyed by the active tab so a switch replays the pane entrance. The key comes from the route, since the
+              tabs store is a list rather than a current-tab accessor, and a setting read that is still missing from
+              an older profile counts as enabled. */}
+          <Show when={settings.appearance?.tabTransitions?.() !== false && activeTabKey()}>
+            {(key) => (
               <PluginServerCover>
-                <div data-slot="tab-transition" data-tab={tab().id}>
+                <div data-slot="tab-transition" data-tab={key()}>
                   <Suspense>{props.children}</Suspense>
                 </div>
               </PluginServerCover>
