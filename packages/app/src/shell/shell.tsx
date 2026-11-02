@@ -303,8 +303,9 @@ export default function Layout(props: ParentProps) {
           }}
         >
           {/* Keyed by the active tab so a switch replays the pane entrance. The setting turns it off, and the key
-              stays stable while no tab is active, so nothing remounts on unrelated updates. */}
-          <Show when={settings.appearance.tabTransitions() && tabs.current()}>
+              stays stable while no tab is active, so nothing remounts on unrelated updates. The settings store can
+              still be missing keys from an older profile, so read it defensively. */}
+          <Show when={settings.appearance?.tabTransitions?.() !== false && tabs.current()}>
             {(tab) => (
               <PluginServerCover>
                 <div data-slot="tab-transition" data-tab={tab().id}>
@@ -313,7 +314,7 @@ export default function Layout(props: ParentProps) {
               </PluginServerCover>
             )}
           </Show>
-          <Show when={!settings.appearance.tabTransitions()}>
+          <Show when={settings.appearance?.tabTransitions?.() === false}>
             <PluginServerCover>
               <Suspense>{props.children}</Suspense>
             </PluginServerCover>
