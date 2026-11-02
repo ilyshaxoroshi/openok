@@ -4,10 +4,11 @@
   "version": "2.2.5",
   "type": "module",
   "license": "MIT",
-  "homepage": "https://opencode.ai",
+  "description": "OpenOK desktop app, an open fork of OpenCode",
+  "homepage": "https://github.com/ilyshaxoroshi/openok",
   "author": {
-    "name": "OpenCode",
-    "email": "hello@opencode.ai"
+    "name": "OpenOK",
+    "email": "openok@users.noreply.github.com"
   },
   "scripts": {
     "typecheck": "bun check --no-script -b",
