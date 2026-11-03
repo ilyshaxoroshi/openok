@@ -304,7 +304,8 @@ function OkPetBody(props: { physics: boolean; label: string }) {
       onPointerCancel={onPointerUp}
       onDblClick={celebrate}
     >
-      <img src="/ok.png" alt="" draggable={false} />
+      <img data-slot="ok-pet-awake" src="/ok.png" alt="" draggable={false} />
+      <img data-slot="ok-pet-asleep" src="/sleep.png" alt="" draggable={false} />
       <div data-slot="ok-pet-bursts" ref={bursts} aria-hidden="true" />
       <Show when={sleeping()}>
         <span data-slot="ok-pet-z" aria-hidden="true">
