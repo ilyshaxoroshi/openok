@@ -1,6 +1,7 @@
 import { NodeFileSystem } from "@effect/platform-node"
 import { validateRoutes } from "@opentunnel/client/effect"
 import { Service, type Info } from "@opencode/client/effect/service"
+import { fallback } from "@opencode/client/service"
 import { Global } from "@opencode/util/global"
 import { OPENCODE_VERSION } from "../src/version"
 import { expect, test } from "bun:test"
@@ -25,6 +26,7 @@ test("managed service ports are stable per installation channel", () => {
   expect(ServiceConfig.defaultPort("dev", "linux")).toBe(0xc0de)
   expect(ServiceConfig.defaultPort("beta", "linux")).toBe(0xc0de)
   expect(ServiceConfig.defaultPort("next", "linux")).toBe(0xc0de)
+  expect(ServiceConfig.defaultPort("prod", "linux")).toBe(0xc0de)
   expect(ServiceConfig.defaultPort("local", "linux")).toBe(0xc0df)
   expect(ServiceConfig.defaultPort("latest", "darwin")).toBe(0xc0de)
   expect(ServiceConfig.defaultPort("preview-a", "linux")).toBe(ServiceConfig.defaultPort("preview-a", "linux"))
@@ -34,6 +36,7 @@ test("managed service ports are stable per installation channel", () => {
 test("managed service ports on Windows stay below the ranges Windows and WSL reserve", () => {
   expect(ServiceConfig.defaultPort("latest", "win32")).toBe(0x70de)
   expect(ServiceConfig.defaultPort("dev", "win32")).toBe(0x70de)
+  expect(ServiceConfig.defaultPort("prod", "win32")).toBe(0x70de)
   expect(ServiceConfig.defaultPort("local", "win32")).toBe(0x70df)
   const ports = Array.from({ length: 200 }, (_, index) => ({
     windows: ServiceConfig.defaultPort(`preview-${index}`, "win32"),
@@ -266,6 +269,9 @@ test("service filenames share release channels and identify preview channels", (
   expect(ServiceConfig.filename("dev")).toBe("service.json")
   expect(ServiceConfig.filename("beta")).toBe("service.json")
   expect(ServiceConfig.filename("next")).toBe("service.json")
+  // A branded build ships as `prod`, and clients running that build look for the default file.
+  // A channel-specific name here leaves the desktop polling a registration the daemon never writes.
+  expect(ServiceConfig.filename("prod")).toBe(path.basename(fallback()))
   expect(ServiceConfig.filename("local")).toBe("service-local.json")
   expect(ServiceConfig.filename("preview-a")).toBe("service-preview-a.json")
   expect(ServiceConfig.filename("preview/a")).toBe("service-preview-a.json")

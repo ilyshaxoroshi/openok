@@ -38,8 +38,17 @@ const decodeLegacy = Schema.decodeUnknownOption(
 )
 const decodeRegistration = Schema.decodeUnknownEffect(Schema.fromJsonString(Service.Info))
 
+// Channels that ship the same product share one daemon slot: the registration file every client
+// looks for and the port it advertises. A branded build that replaces `latest` ships as `prod`, so
+// it must land on the same slot instead of a channel-specific file its own desktop never reads.
+function sharedChannel(channel: string) {
+  return (
+    channel === "latest" || channel === "dev" || channel === "beta" || channel === "next" || channel === "prod"
+  )
+}
+
 export function filename(channel = OPENCODE_CHANNEL) {
-  if (channel === "latest" || channel === "dev" || channel === "beta" || channel === "next") return "service.json"
+  if (sharedChannel(channel)) return "service.json"
   return `service-${channel.replace(/[^a-zA-Z0-9._-]/g, "-")}.json`
 }
 
@@ -54,13 +63,13 @@ export function defaultPort(channel = OPENCODE_CHANNEL, platform = process.platf
 }
 
 function channelPort(channel: string) {
-  if (channel === "latest" || channel === "dev" || channel === "beta" || channel === "next") return 0xc0de
+  if (sharedChannel(channel)) return 0xc0de
   if (channel === "local") return 0xc0df
   return 10_000 + (Number.parseInt(Hash.fast(channel).slice(0, 8), 16) % 50_000)
 }
 
 export function legacyFilename(channel = OPENCODE_CHANNEL) {
-  if (channel === "latest" || channel === "local") return
+  if (channel === "latest" || channel === "local" || channel === "prod") return
   return `service-${Hash.fast(channel)}.json`
 }
 
