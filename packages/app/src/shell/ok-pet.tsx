@@ -1,5 +1,7 @@
-import { Show, createSignal, onCleanup, onMount } from "solid-js"
+import { Show, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js"
 import { useLanguage } from "@/runtime/i18n/language"
+import { useGlobal } from "@/runtime/server/runtime"
+import { useCurrentRoute } from "@/shell/state/layout"
 import { useSettings } from "@/settings/model"
 import "./ok-pet.css"
 
@@ -67,9 +69,26 @@ function OkPetBody(props: { physics: boolean; label: string }) {
   let meow: HTMLAudioElement | undefined
   const timers = new Set<number>()
 
+  const global = useGlobal()
+  const route = useCurrentRoute()
+
   const body: Body = { x: 0, y: 0, vx: 0, vy: 0, angle: 0, spin: 0 }
   const [ready, setReady] = createSignal(false)
   const [sleeping, setSleeping] = createSignal(false)
+
+  // The pet follows the session in view: while the agent works there it stays awake and fidgets, and when that
+  // run finishes it cheers, but leaving a busy session for another screen is not a finish.
+  const activity = createMemo(() => {
+    const current = route()
+
+    if (current.type !== "session") return { session: undefined, working: false }
+
+    const ctx = global.serverCtx(current.server)
+
+    return { session: current.sessionId, working: ctx?.data.session.status(current.sessionId) === "running" }
+  })
+
+  const working = () => activity().working
 
   // Picking the pet up snaps it back to its classic upright pose.
   const upright = () => {
@@ -191,9 +210,10 @@ function OkPetBody(props: { physics: boolean; label: string }) {
     const dt = Math.min(0.032, (time - last) / 1000)
 
     if (!dragging) step(dt)
-    // Doze off only once the body has settled, so a slow fall never counts as sleep.
+    // Doze off only once the body has settled, so a slow fall never counts as sleep. A working agent keeps the pet
+    // up even while it sits still.
     const rest = Math.abs(body.vx) < 30 && Math.abs(body.vy) < 30
-    const idle = rest && time - lastActive > SLEEP_AFTER
+    const idle = !working() && rest && time - lastActive > SLEEP_AFTER
 
     if (idle !== sleeping()) setSleeping(idle)
     handle = requestAnimationFrame(frame)
@@ -206,10 +226,7 @@ function OkPetBody(props: { physics: boolean; label: string }) {
     void meow.play().catch(() => {})
   }
 
-  const celebrate = () => {
-    wake()
-    playMeow()
-
+  const burst = () => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
     // Hearts rise out of the pet and clean themselves up.
@@ -230,6 +247,31 @@ function OkPetBody(props: { physics: boolean; label: string }) {
       timers.add(timer)
     }
   }
+
+  const celebrate = () => {
+    wake()
+    playMeow()
+    burst()
+  }
+
+  const cheer = () => {
+    wake()
+    burst()
+  }
+
+  // Start fidgeting as soon as the agent gets to work, and cheer when that session finishes rather than when the user
+  // merely leaves it.
+  createEffect(
+    on(activity, (next, last) => {
+      if (next.working) {
+        wake()
+
+        return
+      }
+
+      if (last?.working && last.session === next.session) cheer()
+    }),
+  )
 
   const onPointerDown = (event: PointerEvent) => {
     if (event.button !== 0) return
@@ -296,6 +338,7 @@ function OkPetBody(props: { physics: boolean; label: string }) {
       data-physics={props.physics ? "on" : "off"}
       data-ready={ready() ? "true" : "false"}
       data-sleeping={sleeping() ? "true" : "false"}
+      data-working={working() ? "true" : "false"}
       role="img"
       aria-label={props.label}
       onPointerDown={onPointerDown}
@@ -310,6 +353,13 @@ function OkPetBody(props: { physics: boolean; label: string }) {
       <Show when={sleeping()}>
         <span data-slot="ok-pet-z" aria-hidden="true">
           z
+        </span>
+      </Show>
+      <Show when={working()}>
+        <span data-slot="ok-pet-think" aria-hidden="true">
+          <i />
+          <i />
+          <i />
         </span>
       </Show>
     </div>
