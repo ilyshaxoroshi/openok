@@ -8,17 +8,19 @@ export const CHANNEL: Channel = raw === "local" || raw === "dev" || raw === "bet
 
 export const VERSION = app.isPackaged ? app.getVersion() : (process.env.OPENCODE_VERSION ?? app.getVersion())
 
-const appNames: Record<string, string> = {
+const appNames = {
+  local: "OpenCode Dev",
   dev: "OpenCode Dev",
   beta: "OpenCode Beta",
   prod: "OpenOK",
-}
+} satisfies Record<Channel, string>
 
-const appIDs: Record<string, string> = {
+const appIDs = {
+  local: "ai.opencode.desktop.dev",
   dev: "ai.opencode.desktop.dev",
   beta: "ai.opencode.desktop.beta",
   prod: "io.github.ilyshaxoroshi.openok",
-}
+} satisfies Record<Channel, string>
 
 // Local renderer/server mode keeps the dev application identity.
 export const APP_NAME = app.isPackaged ? appNames[CHANNEL] : "OpenCode Dev"
