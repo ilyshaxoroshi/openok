@@ -34,7 +34,7 @@ jobs:
           mkdir -p _pages
           cp -R site/. _pages/
           cp load.png _pages/load.png
-          sed -i 's#\.\./load\.png#./load.png#g' _pages/index.html
+          sed -i 's#\.\./load\.png#./load.png#g' _pages/*.html
 
       - uses: actions/configure-pages@v5
 
