@@ -1,11 +1,9 @@
 import { createSignal, Index, Show } from "solid-js"
-import { Effect, Option, Predicate, Schema } from "effect"
 import { Button } from "@opencode/ui/button"
 import { Dialog } from "@opencode/ui/dialog"
 import { usePlugin, type DialogHandle, type SetupContext } from "@opencode/plugin/gui"
+import { RELEASES } from "./changelog"
 import type definition from "./index"
-
-const CHANGELOG_URL = "https://opencode.ai/changelog.json"
 
 type Highlight = {
   title: string
@@ -13,128 +11,24 @@ type Highlight = {
   media?: { type: "image" | "video"; src: string; alt?: string }
 }
 
-/** An optional field that reads as absent when it holds anything else, as the changelog is read leniently. */
-function lenient<S extends Schema.ConstraintCodec<unknown, unknown>>(schema: S) {
-  const field = Schema.optional(schema)
-
-  return Schema.catchDecoding<typeof field>(() => Effect.succeed(Option.none()))(field)
-}
-
-/** A list entry that reads as undefined when it is malformed, so the rest of the list still counts. */
-function entry<S extends Schema.ConstraintCodec<unknown, unknown>>(schema: S) {
-  const item = Schema.UndefinedOr(schema)
-
-  return Schema.catchDecoding<typeof item>(() => Effect.succeed(Option.some(undefined)))(item)
-}
-
-const Text = lenient(Schema.Union([Schema.String, Schema.Number]))
-
-const Media = Schema.Struct({ type: Text, src: Text, url: Text })
-
-const Item = Schema.Struct({ title: Text, description: Text, shortDescription: Text, media: lenient(Media) })
-
-const Group = Schema.Struct({ ...Item.fields, source: Text, items: lenient(Schema.Array(entry(Item))) })
-
-const Release = Schema.Struct({
-  tag: Text,
-  tag_name: Text,
-  name: Text,
-  highlights: lenient(Schema.Array(entry(Group))),
-})
-
-const Releases = Schema.Array(entry(Release))
-
-const Changelog = Schema.Union([Releases, Schema.Struct({ releases: Releases })])
-
-const decodeChangelog = Schema.decodeUnknownOption(Changelog)
-
 /**
- * Shows the desktop highlights of the releases since `previous` once the changelog loads, and remembers the current
- * version as seen. A changelog without highlights only remembers the version; a failed request leaves it for the next
- * start.
+ * Shows OpenOK's release highlights for the releases since `previous` and remembers the current version as seen. A
+ * release without highlights only remembers the version.
  */
 export function showWhatsNew(
   ctx: SetupContext<typeof definition>,
   input: { readonly previous: string; readonly current: string; readonly markSeen: () => void },
 ) {
-  const timers = new Set<ReturnType<typeof setTimeout>>()
+  const highlights = sliceHighlights(RELEASES, input.current, input.previous)
 
-  ctx.signal.addEventListener("abort", () => timers.forEach(clearTimeout))
+  if (highlights.length === 0) return input.markSeen()
 
-  fetch(CHANGELOG_URL, { signal: ctx.signal, headers: { Accept: "application/json" } })
-    .then((response) => (response.ok ? response.json() : undefined))
-    .then((json) => {
-      if (!json) return
+  const timer = setTimeout(() => {
+    input.markSeen()
+    ctx.dialogs.open((dialog) => <DialogReleaseNotes highlights={highlights} dialog={dialog} />, { replace: true })
+  }, 500)
 
-      const highlights = Option.match(decodeChangelog(json), {
-        onNone: () => [],
-        onSome: (changelog) => sliceHighlights(releases(changelog), input.current, input.previous),
-      })
-
-      if (ctx.signal.aborted) return
-
-      if (highlights.length === 0) return input.markSeen()
-
-      timers.add(
-        setTimeout(() => {
-          input.markSeen()
-          ctx.dialogs.open((dialog) => <DialogReleaseNotes highlights={highlights} dialog={dialog} />, {
-            replace: true,
-          })
-        }, 500),
-      )
-    })
-    .catch(() => undefined)
-}
-
-function releases(changelog: typeof Changelog.Type) {
-  return ("releases" in changelog ? changelog.releases : changelog).flatMap((release) => {
-    if (!release) return []
-
-    const groups = release.highlights ?? []
-
-    return [
-      {
-        tag: text(release.tag) ?? text(release.tag_name) ?? text(release.name),
-        highlights: groups.flatMap((group) => {
-          const source = text(group?.source)
-
-          if (!group || !source?.toLowerCase().includes("desktop")) return []
-
-          if (group.items) return group.items.flatMap((item) => (item ? Option.toArray(highlight(item)) : []))
-
-          return Option.toArray(highlight(group))
-        }),
-      },
-    ]
-  })
-}
-
-function highlight(item: typeof Item.Type): Option.Option<Highlight> {
-  const title = text(item.title)
-  const description = text(item.description) ?? text(item.shortDescription)
-
-  if (!title || !description) return Option.none()
-
-  return Option.some({ title, description, media: media(item.media, title) })
-}
-
-function media(value: typeof Media.Type | undefined, alt: string): Highlight["media"] {
-  const type = text(value?.type)?.toLowerCase()
-  const src = text(value?.src) ?? text(value?.url)
-
-  if (!src) return
-
-  if (type !== "image" && type !== "video") return
-
-  return { type, src, alt }
-}
-
-/** A trimmed, non-empty string, or a number written out. */
-function text(value: string | number | undefined) {
-  if (Predicate.isNumber(value)) return String(value)
-
-  return value?.trim() || undefined
+  ctx.signal.addEventListener("abort", () => clearTimeout(timer))
 }
 
 function normalizeVersion(value: string | undefined) {
@@ -300,8 +194,28 @@ function DialogReleaseNotes(props: { highlights: Highlight[]; dialog: DialogHand
           </div>
         </div>
 
-        {/* Right side - Media content (edge to edge) */}
-        <Show when={feature()?.media}>
+        {/* Right side - Media content (edge to edge), or the mascot when the notes carry no media */}
+        <Show
+          when={feature()?.media}
+          fallback={
+            <div class="relative flex-1 min-w-0 overflow-hidden rounded-r-xl bg-surface-base">
+              <div
+                aria-hidden="true"
+                class="absolute inset-0"
+                style={{
+                  background:
+                    "radial-gradient(circle at 50% 62%, rgba(124,196,255,0.32), rgba(184,166,255,0.12) 45%, transparent 70%)",
+                }}
+              />
+              <img
+                src="/ok.png"
+                alt=""
+                class="absolute inset-0 m-auto w-[68%] max-w-[220px] object-contain"
+                style={{ filter: "drop-shadow(0 24px 46px rgba(94,200,255,0.45))" }}
+              />
+            </div>
+          }
+        >
           {(media) => (
             <div class="flex-1 min-w-0 bg-surface-base overflow-hidden rounded-r-xl">
               <Show
