@@ -671,6 +671,10 @@
         margin: 6px 0 0;
       }
 
+      .release-hint a {
+        color: var(--accent);
+      }
+
       footer {
         border-top: 1px solid var(--line);
         padding-block: 34px;
@@ -881,22 +885,21 @@
         <h2>Установка</h2>
         <p class="sub">Скачайте готовую сборку и запустите - собирать из исходников не нужно.</p>
         <div class="release reveal">
-          <h3>OpenOK 1.0.1</h3>
-          <p class="release-lead">Новая версия уже доступна. Установщик ставится поверх 1.0.0, ваши настройки сохранятся.</p>
-          <div class="release-notes">
-            <h4>Исправлено</h4>
-            <ul>
-              <li>Запуск на Windows: фоновый сервис 1.0.1 теперь регистрируется там, где его ищет приложение. Раньше прод-сборка писала service-prod.json, а приложение ждало service.json - из-за этого запуск зависал до таймаута, а в окне появлялась ошибка ERR_CONNECTION_REFUSED (-102).</li>
-            </ul>
+          <h3>OpenOK <span data-release-version>1.0.2</span></h3>
+          <p class="release-lead">Установщик ставится поверх предыдущей версии, ваши настройки сохранятся.</p>
+          <div class="release-notes" data-release-notes>
             <h4>Новое</h4>
             <ul>
-              <li>Спящий питомец: когда котик засыпает, показывается спящий стикер sleep.png с плавным переходом за 240 мс.</li>
+              <li>Питомец реагирует на агента: просыпается, пока сессия работает, и шлёт сердечки, когда она завершается.</li>
+              <li>Экран «Что нового» с маскотом, показывается один раз после обновления.</li>
+              <li>Сборки для Linux: AppImage и DEB.</li>
             </ul>
           </div>
           <div class="release-actions">
-            <a class="btn primary" href="https://github.com/ilyshaxoroshi/openok/releases/download/v1.0.1/OpenOK-win-x64.exe">Скачать OpenOK для Windows</a>
-            <a class="btn" href="https://github.com/ilyshaxoroshi/openok/releases/tag/v1.0.1">Все файлы релиза</a>
+            <a class="btn primary" data-release-download href="https://github.com/ilyshaxoroshi/openok/releases/download/v1.0.2/OpenOK-win-x64.exe">Скачать OpenOK для Windows</a>
+            <a class="btn" data-release-all href="https://github.com/ilyshaxoroshi/openok/releases/tag/v1.0.2">Все файлы релиза</a>
           </div>
+          <p class="release-hint">Linux: <a data-release-appimage href="https://github.com/ilyshaxoroshi/openok/releases/download/v1.0.2/OpenOK-linux-x86_64.AppImage">AppImage</a> · <a data-release-deb href="https://github.com/ilyshaxoroshi/openok/releases/download/v1.0.2/OpenOK-linux-amd64.deb">DEB</a></p>
           <p class="release-hint">Установщик без подписи: SmartScreen может предупредить. Нажмите «Подробнее» → «Выполнить в любом случае».</p>
           <p class="release-hint">Файлы latest.yml и OpenOK-win-x64.exe.blockmap нужны для автообновления - без latest.yml приложение не узнает о новой версии.</p>
         </div>
@@ -1006,5 +1009,6 @@
         })
       }
     </script>
+    <script src="./release-sync.js"></script>
   </body>
 </html>

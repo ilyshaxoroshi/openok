@@ -671,6 +671,10 @@
         margin: 6px 0 0;
       }
 
+      .release-hint a {
+        color: var(--accent);
+      }
+
       footer {
         border-top: 1px solid var(--line);
         padding-block: 34px;
@@ -881,22 +885,21 @@
         <h2>Install</h2>
         <p class="sub">Download the ready build and run it - no building from source needed.</p>
         <div class="release reveal">
-          <h3>OpenOK 1.0.1</h3>
-          <p class="release-lead">A new version is available. The installer goes over 1.0.0 and keeps your settings.</p>
-          <div class="release-notes">
-            <h4>Fixed</h4>
-            <ul>
-              <li>Windows launch: the 1.0.1 background service now registers where the app looks for it. Previously the prod build wrote service-prod.json while the app waited for service.json, so launch hung until timeout and showed ERR_CONNECTION_REFUSED (-102).</li>
-            </ul>
+          <h3>OpenOK <span data-release-version>1.0.2</span></h3>
+          <p class="release-lead">The installer goes over the previous version and keeps your settings.</p>
+          <div class="release-notes" data-release-notes>
             <h4>New</h4>
             <ul>
-              <li>Sleeping pet: when the cat falls asleep, the sleep.png sticker appears with a smooth 240 ms transition.</li>
+              <li>The pet reacts to your agent: he wakes up while a session is working and sends hearts when it finishes.</li>
+              <li>A What's new screen with the mascot, shown once after an update.</li>
+              <li>Linux builds: AppImage and DEB.</li>
             </ul>
           </div>
           <div class="release-actions">
-            <a class="btn primary" href="https://github.com/ilyshaxoroshi/openok/releases/download/v1.0.1/OpenOK-win-x64.exe">Download OpenOK for Windows</a>
-            <a class="btn" href="https://github.com/ilyshaxoroshi/openok/releases/tag/v1.0.1">All release files</a>
+            <a class="btn primary" data-release-download href="https://github.com/ilyshaxoroshi/openok/releases/download/v1.0.2/OpenOK-win-x64.exe">Download OpenOK for Windows</a>
+            <a class="btn" data-release-all href="https://github.com/ilyshaxoroshi/openok/releases/tag/v1.0.2">All release files</a>
           </div>
+          <p class="release-hint">Linux: <a data-release-appimage href="https://github.com/ilyshaxoroshi/openok/releases/download/v1.0.2/OpenOK-linux-x86_64.AppImage">AppImage</a> · <a data-release-deb href="https://github.com/ilyshaxoroshi/openok/releases/download/v1.0.2/OpenOK-linux-amd64.deb">DEB</a></p>
           <p class="release-hint">The installer is unsigned: SmartScreen may warn. Click "More info" then "Run anyway".</p>
           <p class="release-hint">The latest.yml and OpenOK-win-x64.exe.blockmap files are needed for auto-update - without latest.yml the app will not learn about the new version.</p>
         </div>
@@ -1006,5 +1009,6 @@
         })
       }
     </script>
+    <script src="./release-sync.js"></script>
   </body>
 </html>
