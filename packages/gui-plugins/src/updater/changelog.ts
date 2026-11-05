@@ -4,6 +4,21 @@
  */
 export const RELEASES = [
   {
+    tag: "2.2.5",
+    highlights: [
+      {
+        title: "Free models work again",
+        description:
+          "The OpenCode Console gates its free tier by client version. OpenOK now reports its OpenCode base version, so the free tier stops asking for 1.18.0 or newer.",
+      },
+      {
+        title: "Versions follow OpenCode",
+        description:
+          "OpenOK releases now use the upstream version they are built from, so you can tell at a glance which OpenCode a build carries.",
+      },
+    ],
+  },
+  {
     tag: "1.0.2",
     highlights: [
       {
