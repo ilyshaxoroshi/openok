@@ -1,19 +1,19 @@
 <div align="center">
-  <img width="256" alt="Плюшевый котёнок-акула с табличкой OK" src="https://raw.githubusercontent.com/ilyshaxoroshi/openok/dev/packages/app/public/ok.png" />
+  <img width="256" alt="Plush shark kitten holding an OK sign" src="https://raw.githubusercontent.com/ilyshaxoroshi/openok/dev/packages/app/public/ok.png" />
   <h1>OpenOK</h1>
-  <p>Тёплый форк <a href="https://github.com/anomalyco/opencode">OpenCode</a> — агент для терминала и десктопа, только с другим лицом.</p>
-  <p><strong><a href="https://ilyshaxoroshi.github.io/openok/">Сайт</a></strong> · <a href="#отличия-от-opencode">Все отличия от OpenCode</a> · <a href="#установка">Установка</a></p>
+  <p>A warm-hearted fork of <a href="https://github.com/anomalyco/opencode">OpenCode</a> — a terminal and desktop coding agent with a new face.</p>
+  <p><strong><a href="https://ilyshaxoroshi.github.io/openok/">Website</a></strong> · <a href="#differences-from-opencode">All differences from OpenCode</a> · <a href="#installation">Installation</a> · <a href="README.ru.md">Русский</a></p>
 </div>
 
-## Отличия от OpenCode
+## Differences from OpenCode
 
-- **Свой маскот** — кот-акула на экране загрузки, вместо буквы «O» на главном экране и в настройках «О приложении».
-- **«OK» Pet** — плюшевый кот поверх приложения, которого можно перетаскивать. Включается в *Настройки → Внешний вид → "OK" Pet*, физика — отдельным тумблером: падает, кувыркается, отскакивает от краёв окна. Двойной клик — «мяу» и сердечки, после 25 секунд покоя кот засыпает, а место, куда его положили, запоминается между запусками.
-- **Переходы между вкладками** — панель мягко появляется при смене вкладки (*Внешний вид → Motion → Transitions*).
-- **Иконка приложения** — маскот вместо логотипа OpenCode в сборках для Windows и Linux.
-- **Свой сайт** — статическая страница в [`site/`](site), публикуется на GitHub Pages.
+- **Its own mascot** — a shark-cat on the loading screen, instead of the "O" on the home screen and in the "About" settings.
+- **"OK" Pet** — a plush cat on top of the app that you can drag around. Enabled in *Settings → Appearance → "OK" Pet*; physics is a separate toggle: it falls, tumbles, and bounces off the window edges. Double-click for a "meow" and hearts; after 25 seconds of rest the cat falls asleep, and the spot where you put it is remembered between launches.
+- **Tab transitions** — panels fade in softly when switching tabs (*Appearance → Motion → Transitions*).
+- **App icon** — the mascot instead of the OpenCode logo in Windows and Linux builds.
+- **Its own website** — a static page in [`site/`](site), published on GitHub Pages.
 
-## Установка
+## Installation
 
 ```bash
 git clone https://github.com/ilyshaxoroshi/openok.git
@@ -21,17 +21,17 @@ cd openok
 bun install
 ```
 
-Запуск:
+Run:
 
 ```bash
-bun dev            # терминальный интерфейс
-bun dev:web        # веб-интерфейс на localhost:3000
-bun run dev:desktop # десктоп-приложение
+bun dev            # terminal interface
+bun dev:web        # web interface on localhost:3000
+bun run dev:desktop # desktop app
 ```
 
-## Сборка релиза
+## Building a release
 
-Версия форка задаётся при сборке, поэтому `package.json` остаются на версии апстрима. Команды для PowerShell:
+The fork version is set at build time, so the `package.json` files stay on the upstream version. PowerShell commands:
 
 ```powershell
 cd packages\cli
@@ -44,7 +44,7 @@ bun run build
 bun run pack
 ```
 
-`pack` кладёт распакованное приложение в `dist\desktop\app`. Установщик собирается из копии этого каталога вне `dist`, потому что следующий `pack` очищает `dist\desktop`:
+`pack` puts the unpacked app into `dist\desktop\app`. The installer is built from a copy of that directory outside `dist`, because the next `pack` wipes `dist\desktop`:
 
 ```powershell
 Copy-Item -Recurse ..\..\dist\desktop\app $env:TEMP\openok-app
@@ -52,20 +52,20 @@ $env:OPENCODE_DESKTOP_APP="$env:TEMP\openok-app"
 bun run pack
 ```
 
-Готовый установщик — `dist\desktop\OpenOK-win-x64.exe`. Прод-сборка ставится как отдельное приложение `OpenOK` (app id `io.github.ilyshaxoroshi.openok`) и обновляется с GitHub-релизов форка.
+The finished installer is `dist\desktop\OpenOK-win-x64.exe`. The production build installs as a separate `OpenOK` app (app id `io.github.ilyshaxoroshi.openok`) and updates from the fork's GitHub releases.
 
-## Структура
+## Structure
 
-Проект — форк OpenCode, поэтому жить с ним можно так же:
+The project is a fork of OpenCode, so you can live with it the same way:
 
-| Пакет | Назначение |
+| Package | Purpose |
 | --- | --- |
-| `packages/cli` | CLI и TUI |
-| `packages/desktop` | десктоп на Electron |
-| `packages/app` | веб-интерфейс и логика интерфейса |
-| `packages/ui` | компоненты дизайн-системы |
-| `site` | лендинг для GitHub Pages |
+| `packages/cli` | CLI and TUI |
+| `packages/desktop` | Electron desktop app |
+| `packages/app` | web interface and UI logic |
+| `packages/ui` | design system components |
+| `site` | landing page for GitHub Pages |
 
-## Лицензия
+## License
 
-MIT, как и у OpenCode. Все права на исходный агент принадлежат авторам OpenCode.
+MIT, same as OpenCode. All rights to the original agent belong to the OpenCode authors.
