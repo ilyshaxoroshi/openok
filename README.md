@@ -1,10 +1,9 @@
-<img width="256" height="256" alt="Плюшевый котёнок-акула с табличкой OK" src="https://raw.githubusercontent.com/ilyshaxoroshi/openok/dev/packages/app/public/ok.png" />
-
-# OpenOK
-
-Тёплый форк [OpenCode](https://github.com/anomalyco/opencode) — агент для терминала и десктопа, только с другим лицом.
-
-**[Сайт](https://ilyshaxoroshi.github.io/openok/)** · [Все отличия от OpenCode](#отличия-от-opencode) · [Установка](#установка)
+<div align="center">
+  <img width="256" height="256" alt="Плюшевый котёнок-акула с табличкой OK" src="https://raw.githubusercontent.com/ilyshaxoroshi/openok/dev/packages/app/public/ok.png" />
+  <h1>OpenOK</h1>
+  <p>Тёплый форк <a href="https://github.com/anomalyco/opencode">OpenCode</a> — агент для терминала и десктопа, только с другим лицом.</p>
+  <p><strong><a href="https://ilyshaxoroshi.github.io/openok/">Сайт</a></strong> · <a href="#отличия-от-opencode">Все отличия от OpenCode</a> · <a href="#установка">Установка</a></p>
+</div>
 
 ## Отличия от OpenCode
 
