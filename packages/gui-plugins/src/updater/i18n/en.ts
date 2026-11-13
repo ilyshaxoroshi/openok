@@ -12,6 +12,11 @@ export default {
   "migration.description":
     "For now, OpenCode Beta is moving to OpenCode Stable. Download version {{version}}, then install OpenCode from the disk image to continue receiving updates.",
   "section.title": "Updates",
+  "release.available": "Version {{version}} is available",
+  "release.label": "Update {{version}}",
+  "release.title": "Open the download page for version {{version}}",
+  "release.description": "A newer version is available on GitHub.",
+  "release.download": "Download",
   "releaseNotes.title": "Release notes",
   "releaseNotes.description": "Show What's New popups after updates",
   "check.title": "Check for updates",

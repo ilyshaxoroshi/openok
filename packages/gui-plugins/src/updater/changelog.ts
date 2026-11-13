@@ -4,6 +4,26 @@
  */
 export const RELEASES = [
   {
+    tag: "2.2.6",
+    highlights: [
+      {
+        title: "AGENTS.md from every folder",
+        description:
+          "Every AGENTS.md in the project loads when a session starts, nearest first, so monorepo packages keep their own rules without waiting for the agent to read a file there.",
+      },
+      {
+        title: "Claude Code rules as fallbacks",
+        description:
+          "A folder without AGENTS.md uses its CLAUDE.md, and ~/.config/opencode/AGENTS.md falls back to ~/.claude/CLAUDE.md for every project.",
+      },
+      {
+        title: "Download updates by hand",
+        description:
+          "Builds that cannot update themselves now show the latest GitHub release in the titlebar and in Settings › Updates, with a button that opens the download page.",
+      },
+    ],
+  },
+  {
     tag: "2.2.5",
     highlights: [
       {

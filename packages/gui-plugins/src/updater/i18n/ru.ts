@@ -12,6 +12,11 @@ export default {
   "migration.description":
     "Сейчас OpenCode Beta переходит на OpenCode Stable. Скачайте версию {{version}}, затем установите OpenCode из образа диска, чтобы продолжать получать обновления.",
   "section.title": "Обновления",
+  "release.available": "Доступна версия {{version}}",
+  "release.label": "Обновить до {{version}}",
+  "release.title": "Открыть страницу загрузки версии {{version}}",
+  "release.description": "На GitHub доступна новая версия.",
+  "release.download": "Скачать",
   "releaseNotes.title": "Примечания к выпуску",
   "releaseNotes.description": 'Показывать всплывающие окна "Что нового" после обновлений',
   "check.title": "Проверить обновления",

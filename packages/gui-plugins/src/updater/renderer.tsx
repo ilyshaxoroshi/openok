@@ -1,9 +1,10 @@
 import { showToast } from "@opencode/ui/toast"
-import { lazy, onCleanup, Suspense } from "solid-js"
+import { createSignal, lazy, onCleanup, Suspense } from "solid-js"
 import { Command, SettingsPage, TitlebarItem, type SetupContext, type Plugin } from "@opencode/plugin/gui"
 import { onIdle } from "@opencode/plugin/gui/builtin"
 import { Updater } from "@opencode/plugin/gui/updater"
 import { updaterAction } from "./action"
+import type { Release } from "./release"
 import type definition from "./index"
 
 const setup: Plugin.Setup<typeof definition> = (ctx) => {
@@ -14,6 +15,14 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
   const updater = ctx.main(Updater)
   // Undefined until main's updater is up and has sent its state, and again while it is gone.
   const state = () => updater.state()
+  // A build that cannot update itself (unpacked, or the native updater failed) still shows the
+  // GitHub release page, so the user can download a newer version by hand.
+  const [release, setRelease] = createSignal<Release>()
+  void import("./release").then(async (module) => {
+    const found = await module.latest(ctx.app.version, ctx.signal)
+
+    if (!ctx.signal.aborted) setRelease(found)
+  })
 
   const act = (name: "check" | "install") => {
     if (state()) return void import("./actions").then((module) => module[name](ctx, updater))
@@ -42,6 +51,22 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
     }
   })
 
+  // The native updater owns the pill while it can check or install. When it cannot, offer the
+  // release page instead of leaving the user with no way forward.
+  ctx.add(TitlebarItem, () => {
+    const current = state()
+    const found = release()
+
+    if (!found || !current || (current.status !== "disabled" && current.status !== "error")) return
+
+    return {
+      id: "release",
+      label: ctx.t("release.label", { version: found.version }),
+      title: ctx.t("release.title", { version: found.version }),
+      run: () => ctx.system.openExternal(found.url),
+    }
+  })
+
   ctx.add(SettingsPage, {
     id: "updates",
     page: "general",
@@ -49,14 +74,20 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
       return ctx.t("section.title")
     },
     get entries() {
+      const found = release()
+
       return [
         { id: "settings-release-notes", title: ctx.t("releaseNotes.title") },
         { id: "settings-check-updates", title: ctx.t("check.title") },
+        ...(found
+          ? [{ id: "settings-release-available", title: ctx.t("release.available", { version: found.version }) }]
+          : []),
       ]
     },
     render: () => (
       <Suspense>
         <Section
+          release={release}
           state={state}
           run={() => {
             const run = updaterAction(state()).run
