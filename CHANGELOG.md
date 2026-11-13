@@ -2,6 +2,21 @@
 
 Release notes for OpenCode V2, newest first.
 
+## v2.2.6 — 2026-11-13
+
+### Highlights
+
+- **AGENTS.md in Every Project Folder**: rule files from any folder in the project now load at session start, nearest to the current directory first, instead of only loading when the agent reads a file there. Monorepo packages keep their own rules without a restart.
+- **Claude Code Rules as Fallbacks**: a folder without `AGENTS.md` uses its `CLAUDE.md`, and a global `~/.config/opencode/AGENTS.md` falls back to `~/.claude/CLAUDE.md`. Disable them with `OPENCODE_DISABLE_CLAUDE_CODE` or `OPENCODE_DISABLE_CLAUDE_CODE_PROMPT`.
+- **Download Button for Updates**: builds that cannot update themselves, such as an unpacked app, now show the latest GitHub release in the titlebar and in Settings › Updates, with a button that opens the download page.
+
+### Core
+
+#### Improvements
+
+- Global instruction files are still `~/.config/opencode/AGENTS.md`; the global Claude Code file works across every project as a fallback.
+- Recursive instruction discovery skips dependency, VCS, virtualenv and cache folders, and is bounded so a session rooted at a drive or the home directory cannot scan an entire disk.
+
 ## v2.2.5 — 2026-10-30
 
 ### Highlights
