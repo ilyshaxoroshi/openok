@@ -4,7 +4,7 @@ import { define } from "@opencode/plugin/effect/plugin"
 import { FSUtil } from "@opencode/util/fs-util"
 import { Global } from "@opencode/util/global"
 import { sameDirectory } from "@opencode/util/path"
-import path, { dirname, join } from "path"
+import path, { basename, dirname, join, relative, sep } from "path"
 import { Effect, FiberMap, PubSub, Semaphore, Stream } from "effect"
 import { HttpClient, HttpClientRequest } from "effect/http"
 import { Config } from "../../config.js"
@@ -12,6 +12,15 @@ import { Watcher } from "../../filesystem/watcher.js"
 import { InstructionDiscovery } from "../../instruction-discovery.js"
 import { Instructions } from "../../instructions/index.js"
 import { Location } from "../../location.js"
+
+const AGENTS = "AGENTS.md"
+const CLAUDE = "CLAUDE.md"
+const CLAUDE_PROJECT = !truthy(process.env.OPENCODE_DISABLE_CLAUDE_CODE)
+const CLAUDE_PROMPT = CLAUDE_PROJECT && !truthy(process.env.OPENCODE_DISABLE_CLAUDE_CODE_PROMPT)
+// A session rooted at a drive or the home directory must not walk an entire disk before
+// the first prompt, so recursive discovery is bounded and skips those roots entirely.
+const MAX_DIRECTORIES = 5_000
+const HIDDEN_RULE_DIRECTORIES = [".opencode", ".agents", ".github"]
 
 type Loaded =
   | { readonly type: "available"; readonly files: InstructionDiscovery.File[] }
@@ -38,27 +47,38 @@ export const Plugin = define({
       const home = yield* fs.resolve(global.home)
       const project = discovery.project && FSUtil.contains(root, start)
       const stop = FSUtil.contains(home, start) ? home : root
-      const globalFile = yield* fs.resolve(join(global.config, "AGENTS.md"))
+      const globalFile = yield* fs.resolve(join(global.config, AGENTS))
+      const globalClaudeFile = yield* fs.resolve(join(global.home, ".claude", CLAUDE))
+      const globalCandidates = discovery.global
+        ? [globalFile, ...(CLAUDE_PROMPT ? [globalClaudeFile] : [])]
+        : []
       const loaded: { current: Loaded } = { current: { type: "available", files: [] } }
       const configured: { sources: string[]; remote: Map<string, InstructionDiscovery.File> } = {
         sources: [],
         remote: new Map(),
       }
 
-      const publish = (update: Watcher.Update) => PubSub.publish(changes, update.path).pipe(Effect.asVoid)
-      // The ancestor walk can reach the global file when the location sits
-      // beneath the global config dir; global: false excludes it there too.
+      // Recursive project discovery reports every rule file, not only the ones under the
+      // watched root; ignore the global files when the walk itself passes through them.
+      const isGlobal = (file: string) =>
+        sameDirectory(file, globalFile) || (CLAUDE_PROMPT && sameDirectory(file, globalClaudeFile))
+      const publish = (file: string) => PubSub.publish(changes, file).pipe(Effect.asVoid)
+      // The project directory watch reports every file; only rule files open a rescan.
+      const publishRule = (update: Watcher.Update) => (isRuleFile(update.path) ? publish(update.path) : Effect.void)
+      // Global files are watched individually. Project rules above the project root are
+      // watched by name; the project root itself is watched recursively so a rule file
+      // created in any subfolder joins the session without a restart.
       const candidates = [
-        ...(discovery.global ? [globalFile] : []),
-        ...(project
-          ? ancestorDirectories(start, stop)
-              .map((directory) => join(directory, "AGENTS.md"))
-              .filter((file) => discovery.global || file !== globalFile)
-          : []),
+        ...globalCandidates,
+        ...(project ? ancestorRuleFiles(start, root, stop) : []),
       ]
       for (const file of new Set(candidates)) {
         const updates = yield* watcher.subscribe({ path: file, type: "file" })
-        yield* updates.pipe(Stream.runForEach(publish), Effect.forkScoped({ startImmediately: true }))
+        yield* updates.pipe(Stream.runForEach(publishRule), Effect.forkScoped({ startImmediately: true }))
+      }
+      if (project) {
+        const updates = yield* watcher.subscribe({ path: root, type: "directory", ignore: FSUtil.ignoreGlobs })
+        yield* updates.pipe(Stream.runForEach(publishRule), Effect.forkScoped({ startImmediately: true }))
       }
 
       // A missing file may be mid-save and is transient; a denied file (e.g. outside a sandbox grant) stays absent.
@@ -76,19 +96,35 @@ export const Plugin = define({
       })
 
       const globalSource = Effect.fn("ConfigInstructionPlugin.globalSource")(function* () {
-        if (!discovery.global || !(yield* fs.isFile(globalFile))) return []
-        const file = yield* read(globalFile)
-        return file instanceof InstructionDiscovery.File ? [file] : []
+        if (!discovery.global) return []
+        for (const candidate of globalCandidates) {
+          if (!(yield* fs.isFile(candidate))) continue
+          const file = yield* read(candidate)
+          return file instanceof InstructionDiscovery.File ? [file] : []
+        }
+        return []
       })
 
       const projectSource = Effect.fn("ConfigInstructionPlugin.projectSource")(function* () {
         if (!project) return []
+        // The nearest-first upward walk keeps its precedence. The recursive scan then adds
+        // every AGENTS.md (or CLAUDE.md fallback) from any other folder in the project.
         const walked = yield* Effect.forEach(
-          yield* fs.up({ targets: ["AGENTS.md"], start, stop, type: "file" }),
+          yield* fs.up({
+            targets: CLAUDE_PROJECT ? [AGENTS, CLAUDE] : [AGENTS],
+            start,
+            stop,
+            type: "file",
+          }),
           fs.resolve,
         )
-        const discovered = new Set(walked.filter((file) => discovery.global || file !== globalFile))
-        const files = yield* Effect.forEach(discovered, read, { concurrency: "unbounded" })
+        const recursive = !sameDirectory(root, home) && dirname(root) !== root
+        const scannedFiles = recursive ? yield* scanRules(root) : []
+        const scanned = yield* Effect.forEach(scannedFiles, fs.resolve, { concurrency: "unbounded" })
+        const rules = preferredRules([...walked, ...scanned])
+          .filter((file) => !isGlobal(file))
+          .toSorted((left, right) => distance(start, left) - distance(start, right) || left.localeCompare(right))
+        const files = yield* Effect.forEach(rules, read, { concurrency: "unbounded" })
         if (files.some((file) => file === undefined)) return Instructions.unavailable
         return files.filter((file) => file instanceof InstructionDiscovery.File)
       })
@@ -137,7 +173,7 @@ export const Plugin = define({
         for (const [key] of Array.from(watches)) if (!watched.has(key)) yield* FiberMap.remove(watches, key)
         for (const file of watched) {
           const updates = yield* watcher.subscribe({ path: file, type: "file" })
-          yield* FiberMap.run(watches, file, updates.pipe(Stream.runForEach(publish)), {
+          yield* FiberMap.run(watches, file, updates.pipe(Stream.runForEach((update) => publish(update.path))), {
             onlyIfMissing: true,
             startImmediately: true,
           })
@@ -247,6 +283,76 @@ export const Plugin = define({
 function ancestorDirectories(start: string, stop: string): string[] {
   if (sameDirectory(start, stop)) return [start]
   return [start, ...ancestorDirectories(dirname(start), stop)]
+}
+
+// Only rule files above the project root need individual watches: the root itself is
+// watched recursively, so files inside it (and wherever a new subfolder appears) are covered.
+function ancestorRuleFiles(start: string, root: string, stop: string) {
+  return ancestorDirectories(start, stop)
+    .filter((directory) => !FSUtil.contains(root, directory))
+    .flatMap((directory) => [join(directory, AGENTS), ...(CLAUDE_PROJECT ? [join(directory, CLAUDE)] : [])])
+}
+
+// AGENTS.md wins over CLAUDE.md in the same directory, and the first directory seen keeps
+// its order, so the nearest-first walk stays nearest-first after the recursive scan merges in.
+function preferredRules(files: readonly string[]): string[] {
+  const byDirectory = new Map<string, string>()
+  for (const file of files) {
+    const key = directoryKey(dirname(file))
+    const current = byDirectory.get(key)
+    const agents = basename(file).toLowerCase() === AGENTS.toLowerCase()
+    if (current === undefined || (agents && basename(current).toLowerCase() !== AGENTS.toLowerCase()))
+      byDirectory.set(key, file)
+  }
+  return Array.from(byDirectory.values())
+}
+
+function directoryKey(directory: string) {
+  return process.platform === "win32" ? directory.toLowerCase() : directory
+}
+
+// Counts path segments away from the session directory so files beside it come before
+// files deeper in another part of the project.
+function distance(start: string, file: string) {
+  const segment = relative(start, dirname(file))
+  return segment === "" ? 0 : segment.split(sep).length
+}
+
+function isRuleFile(file: string) {
+  return isRuleName(basename(file))
+}
+
+function isRuleName(name: string) {
+  const lower = name.toLowerCase()
+  return lower === AGENTS.toLowerCase() || (CLAUDE_PROJECT && lower === CLAUDE.toLowerCase())
+}
+
+// Bounded breadth-first walk of the project tree. Symlinked directories are not followed, so a
+// link cycle cannot trap the scan; dot directories are skipped unless they conventionally hold
+// project rules.
+const scanRules = Effect.fn("ConfigInstructionPlugin.scanRules")(function* (root: string) {
+  const fs = yield* FSUtil.Service
+  const files: string[] = []
+  const queue = [root]
+  let visited = 0
+  for (const directory of queue) {
+    if (visited++ >= MAX_DIRECTORIES) break
+    const entries = yield* fs.readDirectoryEntries(directory).pipe(Effect.orElseSucceed(() => []))
+    for (const entry of entries) {
+      if (entry.type === "File" && isRuleName(entry.name)) files.push(join(directory, entry.name))
+      if (
+        entry.type === "Directory" &&
+        !FSUtil.ignoredDirectories.includes(entry.name) &&
+        (!entry.name.startsWith(".") || HIDDEN_RULE_DIRECTORIES.includes(entry.name))
+      )
+        queue.push(join(directory, entry.name))
+    }
+  }
+  return files
+})
+
+function truthy(value?: string) {
+  return value === "1" || value?.toLowerCase() === "true"
 }
 
 function isUrl(source: string) {

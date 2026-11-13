@@ -68,6 +68,8 @@ opencode also supports reading the `AGENTS.md` file from multiple locations. And
 
 Place an `AGENTS.md` in your project root for project-specific rules. These only apply when you are working in this directory or its sub-directories.
 
+OpenOK also loads every rule file from the project's sub-folders, nearest to the current directory first, so a monorepo package can carry its own `AGENTS.md` without a restart or an extra read.
+
 ### Global
 
 You can also have global rules in a `~/.config/opencode/AGENTS.md` file. This gets applied across all opencode sessions.
